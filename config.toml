@@ -1,0 +1,15 @@
+
+baseURL = "https://arikpoz.github.io/"
+languageCode = "en-us"
+title = "Practical ML"
+theme = "PaperMod"
+pagination.pagerSize = 10
+
+[params]
+  description = "A blog on Machine Learning and Software Engineering by Arik Poznanski"
+  ShowReadingTime = true
+  ShowToc = true
+
+[params.assets]
+  customCSS = ["css/custom.css"]
+  
