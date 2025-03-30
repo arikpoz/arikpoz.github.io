@@ -2,17 +2,24 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/posts/</loc>
-    <lastmod>2024-03-01T00:00:00+00:00</lastmod>
+    <loc>https://arikpoz.github.io/posts/2025-03-30-how-to-make-your-neural-network-run-faster-an-overview-of-optimization-techniques/</loc>
+    <lastmod>2025-03-30T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/</loc>
-    <lastmod>2024-03-01T00:00:00+00:00</lastmod>
+    <loc>https://arikpoz.github.io/tags/machine-learning/</loc>
+    <lastmod>2025-03-30T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/posts/test-post/</loc>
-    <lastmod>2024-03-01T00:00:00+00:00</lastmod>
+    <loc>https://arikpoz.github.io/tags/optimization/</loc>
+    <lastmod>2025-03-30T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/categories/</loc>
+    <loc>https://arikpoz.github.io/posts/</loc>
+    <lastmod>2025-03-30T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/tags/</loc>
+    <loc>https://arikpoz.github.io/</loc>
+    <lastmod>2025-03-30T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/tags/</loc>
+    <lastmod>2025-03-30T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/categories/</loc>
   </url>
 </urlset>
