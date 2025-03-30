@@ -2,22 +2,22 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Practical ML</title>
-    <link>https://arikpoz.github.io/</link>
+    <link>http://localhost:1313/</link>
     <description>Recent content on Practical ML</description>
     <image>
       <title>Practical ML</title>
-      <url>https://arikpoz.github.io/images/papermod-cover.png</url>
-      <link>https://arikpoz.github.io/images/papermod-cover.png</link>
+      <url>http://localhost:1313/images/papermod-cover.png</url>
+      <link>http://localhost:1313/images/papermod-cover.png</link>
     </image>
     <generator>Hugo -- 0.145.0</generator>
     <language>en</language>
     <lastBuildDate>Sun, 30 Mar 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://arikpoz.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>How to Make Your Neural Network Run Faster: An Overview of Optimization Techniques</title>
-      <link>https://arikpoz.github.io/posts/2025-03-30-how-to-make-your-neural-network-run-faster-an-overview-of-optimization-techniques/</link>
+      <link>http://localhost:1313/posts/2025-03-30-how-to-make-your-neural-network-run-faster-an-overview-of-optimization-techniques/</link>
       <pubDate>Sun, 30 Mar 2025 00:00:00 +0000</pubDate>
-      <guid>https://arikpoz.github.io/posts/2025-03-30-how-to-make-your-neural-network-run-faster-an-overview-of-optimization-techniques/</guid>
+      <guid>http://localhost:1313/posts/2025-03-30-how-to-make-your-neural-network-run-faster-an-overview-of-optimization-techniques/</guid>
       <description>&lt;h2 id=&#34;introduction&#34;&gt;&lt;strong&gt;Introduction&lt;/strong&gt;&lt;/h2&gt;
 &lt;p&gt;Neural networks are becoming increasingly powerful, but speed remains a crucial factor in real-world applications. Whether you&amp;rsquo;re running models on the cloud, edge devices, or personal hardware, optimizing them for speed can lead to faster inference, lower latency, and reduced resource consumption.&lt;/p&gt;
 &lt;p&gt;In this post, we&amp;rsquo;ll explore various techniques to accelerate neural networks, from model compression to hardware optimizations. This will serve as a foundation for future deep dives into each method.&lt;/p&gt;</description>
