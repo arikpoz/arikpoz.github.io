@@ -3,7 +3,8 @@ baseURL: "https://arikpoz.github.io/"
 title: Practical ML
 # languageCode = "en-us"
 pagination.pagerSize: 5
-theme: [hugo-PaperMod]
+# theme: [hugo-PaperMod]
+theme: [PaperMod]
 
 enableEmoji: true
 mainsections: ["posts", "papermod"]
