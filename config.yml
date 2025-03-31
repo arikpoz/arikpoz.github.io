@@ -62,6 +62,8 @@ params:
   ShowToc: true
   # comments: false
   images: ["images/papermod-cover.png"]
+  enableRobotsTXT: true
+
 
   profileMode:
     enabled: false
