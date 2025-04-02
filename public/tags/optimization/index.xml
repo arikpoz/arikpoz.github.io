@@ -11,8 +11,17 @@
     </image>
     <generator>Hugo -- 0.145.0</generator>
     <language>en</language>
-    <lastBuildDate>Sun, 30 Mar 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 02 Apr 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://arikpoz.github.io/tags/optimization/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Introduction to Model Compression: Why and How to Shrink Neural Networks for Speed</title>
+      <link>https://arikpoz.github.io/posts/2025-04-02-introduction-to-model-compression-why-and-how-to-shrink-neural-networks-for-speed/</link>
+      <pubDate>Wed, 02 Apr 2025 00:00:00 +0000</pubDate>
+      <guid>https://arikpoz.github.io/posts/2025-04-02-introduction-to-model-compression-why-and-how-to-shrink-neural-networks-for-speed/</guid>
+      <description>&lt;h2 id=&#34;introduction&#34;&gt;&lt;strong&gt;Introduction&lt;/strong&gt;&lt;/h2&gt;
+&lt;p&gt;Deep learning models have grown increasingly large and complex, enabling state-of-the-art performance in tasks such as image recognition, natural language processing, and generative AI. However, these large models often come with high computational costs, making them slow to run on edge devices, embedded systems, or even in cloud environments with strict latency requirements.&lt;/p&gt;
+&lt;p&gt;Model compression techniques aim to reduce the size and computational requirements of neural networks while maintaining their accuracy. This enables faster inference, lower power consumption, and better deployment flexibility. In this post, we’ll explore why model compression is essential and provide an overview of four key techniques: &lt;strong&gt;pruning, quantization, knowledge distillation, and low-rank factorization&lt;/strong&gt;.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>How to Make Your Neural Network Run Faster: An Overview of Optimization Techniques</title>
       <link>https://arikpoz.github.io/posts/2025-03-30-how-to-make-your-neural-network-run-faster-an-overview-of-optimization-techniques/</link>
