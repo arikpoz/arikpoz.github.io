@@ -6,6 +6,8 @@ pagination.pagerSize: 5
 # theme: [hugo-PaperMod]
 theme: [PaperMod]
 
+googleAnalytics: G-KDV9XDG1TJ
+
 enableEmoji: true
 mainsections: ["posts", "papermod"]
 
@@ -105,10 +107,6 @@ params:
   # icon: icon.png
   # iconHeight: 35
 
-  # analytics:
-  #     google:
-  #         SiteVerificationTag: "XYZabc"
-
 
 markup:
   goldmark:
@@ -145,3 +143,4 @@ services:
     disableInlineCSS: true
   x:
     disableInlineCSS: true
+
