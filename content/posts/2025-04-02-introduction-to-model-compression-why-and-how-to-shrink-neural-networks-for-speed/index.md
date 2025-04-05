@@ -6,6 +6,8 @@ draft: false
 tags: ["machine-learning", "optimization"]
 ---
 
+![Glowing digital brain shrinking in size, symbolizing faster, smaller neural networks](lead-image.png)
+
 ## **Introduction**
 Deep learning models have grown increasingly large and complex, enabling state-of-the-art performance in tasks such as image recognition, natural language processing, and generative AI. However, these large models often come with high computational costs, making them slow to run on edge devices, embedded systems, or even in cloud environments with strict latency requirements.
 
@@ -14,7 +16,7 @@ Model compression techniques aim to reduce the size and computational requiremen
 ---
 
 ## **Why Compress Neural Networks?**
-Compression is not just about saving memory—it significantly improves inference speed and enables deployment on a wider range of hardware. Here are some key benefits:
+Compression is not just about saving memory - it significantly improves inference speed and enables deployment on a wider range of hardware. Here are some key benefits:
 
 - **Faster Inference:** Smaller models require fewer computations, reducing latency in real-time applications.
 - **Lower Memory Footprint:** Compressed models take up less storage, making them ideal for mobile and edge devices.
@@ -103,4 +105,4 @@ Each compression technique has trade-offs, and the best choice depends on your t
 ---
 
 ## **Conclusion**
-Model compression is a critical step in optimizing deep learning models for speed and efficiency. Each method—pruning, quantization, knowledge distillation, and low-rank factorization—offers unique advantages depending on the application. 
+Model compression is a critical step in optimizing deep learning models for speed and efficiency. Each method: pruning, quantization, knowledge distillation, and low-rank factorization, offers unique advantages depending on the application. 
