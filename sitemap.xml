@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://arikpoz.github.io/posts/</loc>
+    <lastmod>2025-04-04T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/</loc>
+    <lastmod>2025-04-04T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/posts/2025-04-02-introduction-to-model-compression-why-and-how-to-shrink-neural-networks-for-speed/</loc>
+    <lastmod>2025-04-02T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/tags/machine-learning/</loc>
+    <lastmod>2025-04-02T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/tags/optimization/</loc>
+    <lastmod>2025-04-02T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/tags/</loc>
+    <lastmod>2025-04-02T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/posts/2025-03-30-how-to-make-your-neural-network-run-faster-an-overview-of-optimization-techniques/</loc>
+    <lastmod>2025-03-30T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/posts/test-post/</loc>
+    <lastmod>2024-03-01T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/categories/</loc>
+  </url>
+</urlset>
