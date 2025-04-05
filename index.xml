@@ -23,11 +23,11 @@
       <description>&lt;p&gt;&lt;img src=&#34;lead-image.png&#34; alt=&#34;Illustration of a neural network transforming into a faster, optimized version&#34;&gt;&lt;/p&gt;&#xA;&lt;h2 id=&#34;introduction&#34;&gt;&lt;strong&gt;Introduction&lt;/strong&gt;&lt;/h2&gt;&#xA;&lt;p&gt;Neural networks are becoming increasingly powerful, but speed remains a crucial factor in real-world applications. Whether you&amp;rsquo;re running models on the cloud, edge devices, or personal hardware, optimizing them for speed can lead to faster inference, lower latency, and reduced resource consumption.&lt;/p&gt;&#xA;&lt;p&gt;In this post, we&amp;rsquo;ll explore various techniques to accelerate neural networks, from model compression to hardware optimizations. This will serve as a foundation for future deep dives into each method.&lt;/p&gt;</description>
     </item>
     <item>
-      <title>test post</title>
+      <title>test post 2</title>
       <link>https://arikpoz.github.io/posts/test-post/</link>
-      <pubDate>Fri, 01 Mar 2024 00:00:00 +0000</pubDate>
+      <pubDate>Wed, 01 Mar 2023 00:00:00 +0000</pubDate>
       <guid>https://arikpoz.github.io/posts/test-post/</guid>
-      <description>&lt;p&gt;test post&lt;/p&gt;</description>
+      <description>&lt;h1 id=&#34;test-post-2&#34;&gt;test post 2&lt;/h1&gt;&#xA;&lt;h2 id=&#34;subtitle-2&#34;&gt;subtitle 2&lt;/h2&gt;&#xA;&lt;p&gt;content of post 2&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>
