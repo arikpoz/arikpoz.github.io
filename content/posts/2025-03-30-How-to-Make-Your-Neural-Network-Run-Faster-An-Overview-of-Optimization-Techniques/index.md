@@ -6,6 +6,8 @@ draft: false
 tags: ["machine-learning", "optimization"]
 ---
 
+![Illustration of a neural network transforming into a faster, optimized version](lead-image.png)
+
 ## **Introduction**
 Neural networks are becoming increasingly powerful, but speed remains a crucial factor in real-world applications. Whether you're running models on the cloud, edge devices, or personal hardware, optimizing them for speed can lead to faster inference, lower latency, and reduced resource consumption.
 
