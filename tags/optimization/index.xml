@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Optimization on Practical ML</title>
     <link>https://arikpoz.github.io/tags/optimization/</link>
     <description>Recent content in Optimization on Practical ML</description>
-    <generator>Hugo</generator>
+    <image>
+      <title>Practical ML</title>
+      <url>https://arikpoz.github.io/images/papermod-cover.png</url>
+      <link>https://arikpoz.github.io/images/papermod-cover.png</link>
+    </image>
+    <generator>Hugo -- 0.145.0</generator>
     <language>en</language>
     <lastBuildDate>Wed, 02 Apr 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://arikpoz.github.io/tags/optimization/index.xml" rel="self" type="application/rss+xml" />
@@ -13,14 +18,20 @@
       <link>https://arikpoz.github.io/posts/2025-04-02-introduction-to-model-compression-why-and-how-to-shrink-neural-networks-for-speed/</link>
       <pubDate>Wed, 02 Apr 2025 00:00:00 +0000</pubDate>
       <guid>https://arikpoz.github.io/posts/2025-04-02-introduction-to-model-compression-why-and-how-to-shrink-neural-networks-for-speed/</guid>
-      <description>&lt;p&gt;&lt;img src=&#34;https://arikpoz.github.io/posts/2025-04-02-introduction-to-model-compression-why-and-how-to-shrink-neural-networks-for-speed/lead-image.png&#34; alt=&#34;Glowing digital brain shrinking in size, symbolizing faster, smaller neural networks&#34;&gt;&lt;/p&gt;&#xA;&lt;h2 id=&#34;introduction&#34;&gt;&lt;strong&gt;Introduction&lt;/strong&gt;&lt;/h2&gt;&#xA;&lt;p&gt;Deep learning models have grown increasingly large and complex, enabling state-of-the-art performance in tasks such as image recognition, natural language processing, and generative AI. However, these large models often come with high computational costs, making them slow to run on edge devices, embedded systems, or even in cloud environments with strict latency requirements.&lt;/p&gt;&#xA;&lt;p&gt;Model compression techniques aim to reduce the size and computational requirements of neural networks while maintaining their accuracy. This enables faster inference, lower power consumption, and better deployment flexibility. In this post, we’ll explore why model compression is essential and provide an overview of four key techniques: &lt;strong&gt;pruning, quantization, knowledge distillation, and low-rank factorization&lt;/strong&gt;.&lt;/p&gt;</description>
+      <description>&lt;p&gt;&lt;img alt=&#34;Glowing digital brain shrinking in size, symbolizing faster, smaller neural networks&#34; loading=&#34;lazy&#34; src=&#34;https://arikpoz.github.io/posts/2025-04-02-introduction-to-model-compression-why-and-how-to-shrink-neural-networks-for-speed/lead-image.png&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;introduction&#34;&gt;&lt;strong&gt;Introduction&lt;/strong&gt;&lt;/h2&gt;
+&lt;p&gt;Deep learning models have grown increasingly large and complex, enabling state-of-the-art performance in tasks such as image recognition, natural language processing, and generative AI. However, these large models often come with high computational costs, making them slow to run on edge devices, embedded systems, or even in cloud environments with strict latency requirements.&lt;/p&gt;
+&lt;p&gt;Model compression techniques aim to reduce the size and computational requirements of neural networks while maintaining their accuracy. This enables faster inference, lower power consumption, and better deployment flexibility. In this post, we’ll explore why model compression is essential and provide an overview of four key techniques: &lt;strong&gt;pruning, quantization, knowledge distillation, and low-rank factorization&lt;/strong&gt;.&lt;/p&gt;</description>
     </item>
     <item>
       <title>How to Make Your Neural Network Run Faster: An Overview of Optimization Techniques</title>
       <link>https://arikpoz.github.io/posts/2025-03-30-how-to-make-your-neural-network-run-faster-an-overview-of-optimization-techniques/</link>
       <pubDate>Sun, 30 Mar 2025 00:00:00 +0000</pubDate>
       <guid>https://arikpoz.github.io/posts/2025-03-30-how-to-make-your-neural-network-run-faster-an-overview-of-optimization-techniques/</guid>
-      <description>&lt;p&gt;&lt;img src=&#34;https://arikpoz.github.io/posts/2025-03-30-how-to-make-your-neural-network-run-faster-an-overview-of-optimization-techniques/lead-image.png&#34; alt=&#34;Illustration of a neural network transforming into a faster, optimized version&#34;&gt;&lt;/p&gt;&#xA;&lt;h2 id=&#34;introduction&#34;&gt;&lt;strong&gt;Introduction&lt;/strong&gt;&lt;/h2&gt;&#xA;&lt;p&gt;Neural networks are becoming increasingly powerful, but speed remains a crucial factor in real-world applications. Whether you&amp;rsquo;re running models on the cloud, edge devices, or personal hardware, optimizing them for speed can lead to faster inference, lower latency, and reduced resource consumption.&lt;/p&gt;&#xA;&lt;p&gt;In this post, we&amp;rsquo;ll explore various techniques to accelerate neural networks, from model compression to hardware optimizations. This will serve as a foundation for future deep dives into each method.&lt;/p&gt;</description>
+      <description>&lt;p&gt;&lt;img alt=&#34;Illustration of a neural network transforming into a faster, optimized version&#34; loading=&#34;lazy&#34; src=&#34;https://arikpoz.github.io/posts/2025-03-30-how-to-make-your-neural-network-run-faster-an-overview-of-optimization-techniques/lead-image.png&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;introduction&#34;&gt;&lt;strong&gt;Introduction&lt;/strong&gt;&lt;/h2&gt;
+&lt;p&gt;Neural networks are becoming increasingly powerful, but speed remains a crucial factor in real-world applications. Whether you&amp;rsquo;re running models on the cloud, edge devices, or personal hardware, optimizing them for speed can lead to faster inference, lower latency, and reduced resource consumption.&lt;/p&gt;
+&lt;p&gt;In this post, we&amp;rsquo;ll explore various techniques to accelerate neural networks, from model compression to hardware optimizations. This will serve as a foundation for future deep dives into each method.&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>
