@@ -20,7 +20,7 @@
       <guid>https://arikpoz.github.io/posts/2025-04-10-neural-network-pruning-how-to-accelerate-inference-with-minimal-accuracy-loss/</guid>
       <description>&lt;p&gt;&lt;img alt=&#34;Cartoon of a person in an &amp;ldquo;NN Pruning&amp;rdquo; shirt trimming a large robot labeled &amp;ldquo;Neural Network&amp;rdquo; into a slim, fast robot labeled &amp;ldquo;Pruned Network.&amp;rdquo;&#34; loading=&#34;lazy&#34; src=&#34;https://arikpoz.github.io/posts/2025-04-10-neural-network-pruning-how-to-accelerate-inference-with-minimal-accuracy-loss/lead-image.jpg&#34;&gt;&lt;/p&gt;
 &lt;h2 id=&#34;introduction&#34;&gt;Introduction&lt;/h2&gt;
-&lt;p&gt;In this post, I will demonstrate how to use pruning to significantly reduce a model&amp;rsquo;s size and latency while maintaining minimal accuracy loss. In the example, we achieve a 90% reduction in model size and 5.5x faster inference time, all while preserving the same level of accuracy.&lt;/p&gt;</description>
+&lt;p&gt;In this post, I will demonstrate how to use pruning to &lt;strong&gt;significantly reduce a model&amp;rsquo;s size and latency&lt;/strong&gt; while maintaining minimal accuracy loss. In the example, we achieve a &lt;strong&gt;90% reduction in model size&lt;/strong&gt; and &lt;strong&gt;5.5x faster inference time&lt;/strong&gt;, all while preserving the same level of accuracy.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Fast Image Loading with NVIDIA nvImageCodec</title>
