@@ -2,13 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://arikpoz.github.io/posts/2025-04-10-neural-network-pruning-how-to-accelerate-inference-with-minimal-accuracy-loss/</loc>
-    <lastmod>2025-04-10T00:00:00+00:00</lastmod>
+    <loc>https://arikpoz.github.io/posts/2025-04-16-neural-network-quantization-in-pytorch/</loc>
+    <lastmod>2025-04-16T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://arikpoz.github.io/posts/</loc>
-    <lastmod>2025-04-10T00:00:00+00:00</lastmod>
+    <lastmod>2025-04-16T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://arikpoz.github.io/</loc>
+    <lastmod>2025-04-16T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/posts/2025-04-10-neural-network-pruning-how-to-accelerate-inference-with-minimal-accuracy-loss/</loc>
     <lastmod>2025-04-10T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://arikpoz.github.io/posts/2025-04-07-fast-image-loading-with-nvidia-nvimagecodec/</loc>
