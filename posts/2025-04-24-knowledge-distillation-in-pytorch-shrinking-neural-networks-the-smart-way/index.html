@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Knowledge Distillation in PyTorch: Shrinking Neural Networks the Smart Way | Practical ML</title>
+<meta name="keywords" content="">
+<meta name="description" content="
+Introduction
+What if your model could run twice as fast and use half the memory, without giving up much accuracy?
+This is the promise of knowledge distillation: training smaller, faster models to mimic larger, high-performing ones. In this post, we’ll walk through how to distill a powerful ResNet50 model into a lightweight ResNet18 and demonstrate a &#43;5% boost in accuracy compared to training the smaller model from scratch, all while cutting inference latency by over 50%.">
+<meta name="author" content="Arik Poznanski">
+<link rel="canonical" href="https://arikpoz.github.io/posts/2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.f49d66caae9ea0fd43f21f29e71a8d3e284517ed770f2aa86fa012953ad3c9ef.css" integrity="sha256-9J1myq6eoP1D8h8p5xqNPihFF&#43;13Dyqob6ASlTrTye8=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://arikpoz.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://arikpoz.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://arikpoz.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://arikpoz.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://arikpoz.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://arikpoz.github.io/posts/2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+<meta name="google-site-verification" content="W9Zr2fU6GN7Pj5eoP80QHjzCMltqYsT_ut_zg5S8FP8" />
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true},{left: '$', right: '$', display: false}]});">
+</script>
+
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-KDV9XDG1TJ"></script>
+      <script>
+        var doNotTrack = false;
+        if ( false ) {
+          var dnt = (navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack);
+          var doNotTrack = (dnt == "1" || dnt == "yes");
+        }
+        if (!doNotTrack) {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-KDV9XDG1TJ');
+        }
+      </script>
+
+
+
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://arikpoz.github.io/" accesskey="h" title="Practical ML (Alt + H)">Practical ML</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://arikpoz.github.io/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://arikpoz.github.io/">Home</a>&nbsp;»&nbsp;<a href="https://arikpoz.github.io/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Knowledge Distillation in PyTorch: Shrinking Neural Networks the Smart Way
+    </h1>
+    <div class="post-meta"><span title='2025-04-24 00:00:00 +0000 UTC'>April 24, 2025</span>&nbsp;·&nbsp;13 min&nbsp;·&nbsp;Arik Poznanski
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#introduction" aria-label="Introduction">Introduction</a></li>
+                <li>
+                    <a href="#what-is-knowledge-distillation" aria-label="What Is Knowledge Distillation?">What Is Knowledge Distillation?</a></li>
+                <li>
+                    <a href="#why-use-it" aria-label="Why Use It?">Why Use It?</a></li>
+                <li>
+                    <a href="#how-does-it-work" aria-label="How Does It Work?">How Does It Work?</a><ul>
+                        
+                <li>
+                    <a href="#temperature-scaling" aria-label="Temperature Scaling">Temperature Scaling</a></li></ul>
+                </li>
+                <li>
+                    <a href="#pytorch-example-resnet50--resnet18-on-cifar-10" aria-label="PyTorch Example: ResNet50 ➞ ResNet18 on CIFAR-10">PyTorch Example: ResNet50 ➞ ResNet18 on CIFAR-10</a><ul>
+                        
+                <li>
+                    <a href="#basic-setup" aria-label="Basic Setup">Basic Setup</a></li>
+                <li>
+                    <a href="#load-dataset" aria-label="Load Dataset">Load Dataset</a></li>
+                <li>
+                    <a href="#define-models" aria-label="Define Models">Define Models</a></li>
+                <li>
+                    <a href="#evaluation-functions-for-size-latency-and-accuracy" aria-label="Evaluation Functions for Size, Latency and Accuracy">Evaluation Functions for Size, Latency and Accuracy</a></li>
+                <li>
+                    <a href="#fine-tuning-the-teacher" aria-label="Fine-tuning the Teacher">Fine-tuning the Teacher</a></li>
+                <li>
+                    <a href="#training-the-student-via-distillation" aria-label="Training the Student via Distillation">Training the Student via Distillation</a></li>
+                <li>
+                    <a href="#model-comparison-code" aria-label="Model Comparison Code">Model Comparison Code</a></li>
+                <li>
+                    <a href="#training-a-baseline-student-resnet18-from-scratch" aria-label="Training a baseline student (ResNet18 from scratch)">Training a baseline student (ResNet18 from scratch)</a></li></ul>
+                </li>
+                <li>
+                    <a href="#does-knowledge-distillation-help" aria-label="Does Knowledge Distillation Help?">Does Knowledge Distillation Help?</a><ul>
+                        
+                <li>
+                    <a href="#model-comparison-table" aria-label="Model Comparison Table">Model Comparison Table</a></li>
+                <li>
+                    <a href="#summary" aria-label="Summary">Summary</a></li></ul>
+                </li>
+                <li>
+                    <a href="#references" aria-label="References">References</a>
+                </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><p><img alt="&ldquo;A glowing teacher neural network transferring knowledge to a smaller student model, with the title &lsquo;Knowledge Distillation&rsquo; overlaid.&rdquo;" loading="lazy" src="/posts/2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way/lead-image.jpg"></p>
+<h2 id="introduction">Introduction<a hidden class="anchor" aria-hidden="true" href="#introduction">#</a></h2>
+<p><strong>What if your model could run twice as fast and use half the memory, without giving up much accuracy?</strong><br>
+This is the promise of <strong>knowledge distillation</strong>: training smaller, faster models to mimic larger, high-performing ones. In this post, we’ll walk through how to distill a powerful ResNet50 model into a lightweight ResNet18 and demonstrate a <strong>+5% boost in accuracy</strong> compared to training the smaller model from scratch, all while cutting inference latency by over <strong>50%</strong>.</p>
+<p>You&rsquo;ll learn:</p>
+<ul>
+<li>What knowledge distillation is and how it works</li>
+<li>Why it’s useful for deployment on resource-constrained devices</li>
+<li>How to implement it in PyTorch using both soft target alignment and intermediate feature matching</li>
+<li>How a distilled ResNet18 performs against a baseline trained from scratch</li>
+</ul>
+<hr>
+<h2 id="what-is-knowledge-distillation">What Is Knowledge Distillation?<a hidden class="anchor" aria-hidden="true" href="#what-is-knowledge-distillation">#</a></h2>
+<p>Knowledge distillation, first proposed by <a href="https://arxiv.org/abs/1503.02531">Hinton et al.</a>, is a technique designed to transfer the rich, nuanced information, often referred to as &ldquo;dark knowledge&rdquo;, from a large, high-capacity model (the <strong>teacher model</strong>) to a smaller, more efficient model (the <strong>student model</strong>). This process enables the student model to mimic the teacher&rsquo;s behavior, capturing its insights and generalization capabilities while maintaining a significantly reduced size.</p>
+<p>The key idea: rather than training the student only on ground-truth labels, we also train it to mimic the <em>output distribution</em> of the teacher model. These soft targets contain valuable information about class relationships that can help the student generalize better.</p>
+<p>If the teacher and student architectures are compatible, the student model can be trained to mimic not only the teacher&rsquo;s output distribution but also its intermediate feature representations from inner layers. By aligning the student&rsquo;s internal feature maps with those of the teacher, this additional supervision enables the student to better capture the teacher&rsquo;s reasoning process. The following code example demonstrates how to implement this approach effectively.</p>
+<hr>
+<h2 id="why-use-it">Why Use It?<a hidden class="anchor" aria-hidden="true" href="#why-use-it">#</a></h2>
+<ul>
+<li>Reduce model size for <strong>mobile &amp; embedded</strong> devices</li>
+<li>Achieve <strong>faster inference</strong> with smaller models</li>
+<li>Maintain much of the accuracy of larger models</li>
+<li>Leverage expensive pretrained models efficiently</li>
+</ul>
+<hr>
+<h2 id="how-does-it-work">How Does It Work?<a hidden class="anchor" aria-hidden="true" href="#how-does-it-work">#</a></h2>
+<p>The training loss for the student typically combines:</p>
+<ol>
+<li><strong>Cross-entropy loss</strong> with the ground-truth labels (hard targets)</li>
+<li><strong>KL divergence</strong> between the student and teacher soft logits (soft targets)</li>
+</ol>
+<p>To understand the second part, let’s first recall how the softmax function works:</p>
+<p>$$
+P_i = \frac{e^{z_i}}{\sum_j e^{z_j}}
+$$</p>
+<p>This turns the raw model logits into a probability distribution. In a well-trained model, this distribution is often very &ldquo;peaked&rdquo;, assigning high confidence to one class and nearly zero to others.</p>
+<p>For example, regular softmax might output: <code>[0.95, 0.02, 0.01, 0.01, 0.01]</code></p>
+<p>These probabilities are not very informative beyond the top prediction.</p>
+<h3 id="temperature-scaling">Temperature Scaling<a hidden class="anchor" aria-hidden="true" href="#temperature-scaling">#</a></h3>
+<p>To soften this distribution and reveal more information about the model’s understanding of class relationships, we introduce a <strong>temperature</strong> parameter ( T &gt; 1 ):</p>
+<p>$$
+P_i^{(T)} = \frac{e^{z_i / T}}{\sum_j e^{z_j / T}}
+$$</p>
+<p>With a higher temperature:</p>
+<ul>
+<li>The probability distribution becomes more <strong>spread out</strong></li>
+<li>We get outputs like: <code>[0.4, 0.2, 0.15, 0.15, 0.1]</code></li>
+<li>The student learns not just the right answer, but how the teacher differentiates among all classes</li>
+</ul>
+<p>This is the core of <strong>knowledge distillation</strong>: using these soft targets alongside the hard labels to teach a student network not just what to predict, but how to think like the teacher.</p>
+<hr>
+<h2 id="pytorch-example-resnet50--resnet18-on-cifar-10">PyTorch Example: ResNet50 ➞ ResNet18 on CIFAR-10<a hidden class="anchor" aria-hidden="true" href="#pytorch-example-resnet50--resnet18-on-cifar-10">#</a></h2>
+<p>In this section, we will take a large teacher model, specifically a ResNet50 pretrained on ImageNet1K and fine-tuned on CIFAR-10, and distill its knowledge into a smaller, more efficient ResNet18 model.</p>
+<p>We will then evaluate and compare the teacher and student models in terms of accuracy, latency, and size. Additionally, we will assess the performance of the student model trained directly on CIFAR-10 without knowledge distillation, to highlight the benefits of this technique.</p>
+<p>For a complete, self-contained Jupyter Notebook implementation, visit <a href="https://github.com/arikpoz/neural-network-optimization/blob/main/Knowledge%20Distillation%20in%20PyTorch.ipynb">this link</a>. It is part of my <a href="https://github.com/arikpoz/neural-network-optimization">Neural Network Optimization</a> GitHub repository.</p>
+<h3 id="basic-setup">Basic Setup<a hidden class="anchor" aria-hidden="true" href="#basic-setup">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">os</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">time</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">random_split</span><span class="p">,</span> <span class="n">DataLoader</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">torch.optim.lr_scheduler</span> <span class="kn">import</span> <span class="n">ReduceLROnPlateau</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">torchvision</span> <span class="kn">import</span> <span class="n">models</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torchvision.transforms</span> <span class="k">as</span> <span class="nn">transforms</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">torchvision.datasets</span> <span class="kn">import</span> <span class="n">CIFAR10</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;PyTorch Version: </span><span class="si">{</span><span class="n">torch</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&#34;cuda&#34;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&#34;cpu&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Device used: </span><span class="si">{</span><span class="n">device</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="load-dataset">Load Dataset<a hidden class="anchor" aria-hidden="true" href="#load-dataset">#</a></h3>
+<p>Loads the CIFAR-10 data, prepare train / validation / test split and creates data loaders.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># define transform for CIFAR-10 dataset</span>
+</span></span><span class="line"><span class="cl"><span class="n">transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
+</span></span><span class="line"><span class="cl">    <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">    <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mf">0.4914</span><span class="p">,</span> <span class="mf">0.4822</span><span class="p">,</span> <span class="mf">0.4465</span><span class="p">],</span>  <span class="c1"># CIFAR-10 means</span>
+</span></span><span class="line"><span class="cl">                         <span class="n">std</span><span class="o">=</span><span class="p">[</span><span class="mf">0.2023</span><span class="p">,</span> <span class="mf">0.1994</span><span class="p">,</span> <span class="mf">0.2010</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># load full CIFAR-10 train set</span>
+</span></span><span class="line"><span class="cl"><span class="n">full_trainset</span> <span class="o">=</span> <span class="n">CIFAR10</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s1">&#39;./data&#39;</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># calculate split sizes for train and validation sets</span>
+</span></span><span class="line"><span class="cl"><span class="n">train_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.9</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">full_trainset</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="n">val_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">full_trainset</span><span class="p">)</span> <span class="o">-</span> <span class="n">train_size</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># perform split</span>
+</span></span><span class="line"><span class="cl"><span class="n">train_subset</span><span class="p">,</span> <span class="n">val_subset</span> <span class="o">=</span> <span class="n">random_split</span><span class="p">(</span><span class="n">full_trainset</span><span class="p">,</span> <span class="p">[</span><span class="n">train_size</span><span class="p">,</span> <span class="n">val_size</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Train samples: </span><span class="si">{</span><span class="n">train_size</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Validation samples: </span><span class="si">{</span><span class="n">val_size</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># create DataLoaders</span>
+</span></span><span class="line"><span class="cl"><span class="n">train_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">train_subset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">val_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">val_subset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># CIFAR-10 test set and loader for accuracy evaluation</span>
+</span></span><span class="line"><span class="cl"><span class="n">test_set</span> <span class="o">=</span> <span class="n">CIFAR10</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s1">&#39;./data&#39;</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">test_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">test_set</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Test samples: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">test_set</span><span class="p">)</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>Output:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Train samples: 45000
+</span></span><span class="line"><span class="cl">Validation samples: 5000
+</span></span><span class="line"><span class="cl">Test samples: 10000
+</span></span></code></pre></div><h3 id="define-models">Define Models<a hidden class="anchor" aria-hidden="true" href="#define-models">#</a></h3>
+<p>In this example, we enhance the knowledge distillation process by training the student model to learn not only from the teacher model&rsquo;s output distribution but also from its intermediate feature representations. Since ResNet50 and ResNet18 share a similar architecture, their intermediate features can be aligned for additional supervision. However, the number of channels in their feature maps differs. To address this, we introduce a 1x1 convolutional layer to project the teacher&rsquo;s feature space into the student&rsquo;s feature space, enabling effective feature matching between the two models.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">setup_models</span><span class="p">(</span><span class="n">device</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Setup teacher and student wrapper
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># teacher: ResNet50 pretrained on ImageNet, re-headed for CIFAR-10</span>
+</span></span><span class="line"><span class="cl">    <span class="n">teacher</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">resnet50</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">ResNet50_Weights</span><span class="o">.</span><span class="n">IMAGENET1K_V2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">teacher</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">2048</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">teacher</span> <span class="o">=</span> <span class="n">teacher</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># student: ResNet18 without pretrained weights</span>
+</span></span><span class="line"><span class="cl">    <span class="n">student</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">resnet18</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">student</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> 
+</span></span><span class="line"><span class="cl">    <span class="n">student</span> <span class="o">=</span> <span class="n">student</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span> 
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># define the intermediate feature channels for both teacher and student</span>
+</span></span><span class="line"><span class="cl">    <span class="n">student_channels</span> <span class="o">=</span> <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">512</span><span class="p">]</span> 
+</span></span><span class="line"><span class="cl">    <span class="n">teacher_channels</span> <span class="o">=</span> <span class="p">[</span><span class="mi">256</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="mi">2048</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># create projection layers to align teacher&#39;s feature maps with student&#39;s feature maps</span>
+</span></span><span class="line"><span class="cl">    <span class="n">proj_layers</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">        <span class="n">FeatureProjector</span><span class="p">(</span><span class="n">in_c</span><span class="p">,</span> <span class="n">out_c</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">in_c</span><span class="p">,</span> <span class="n">out_c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">student_channels</span><span class="p">,</span> <span class="n">teacher_channels</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># wrap the student model with the projection layers</span>
+</span></span><span class="line"><span class="cl">    <span class="n">student_wrapper</span> <span class="o">=</span> <span class="n">StudentWrapper</span><span class="p">(</span><span class="n">student</span><span class="p">,</span> <span class="n">proj_layers</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">teacher</span><span class="p">,</span> <span class="n">student_wrapper</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">FeatureProjector</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Feature projector to match student -&gt; teacher feature shapes
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">,</span> <span class="n">out_channels</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># define a 1x1 convolutional layer to project feature maps</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">proj</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span> <span class="n">out_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">target_shape</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1"># check if the spatial dimensions of the input match the target shape</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">!=</span> <span class="n">target_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">            <span class="c1"># adjust spatial dimensions using adaptive average pooling</span>
+</span></span><span class="line"><span class="cl">            <span class="n">x</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">adaptive_avg_pool2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">output_size</span><span class="o">=</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># apply the projection layer to transform feature maps</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">StudentWrapper</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Wrapper for the student model with projection layers
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student_model</span><span class="p">,</span> <span class="n">proj_layers</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># store student model</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">student_model</span>  
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># store projection layers for feature alignment</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">projections</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">(</span><span class="n">proj_layers</span><span class="p">)</span>  
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1"># collect intermediate features from ResNet blocks</span>
+</span></span><span class="line"><span class="cl">        <span class="n">features</span> <span class="o">=</span> <span class="p">[]</span>  
+</span></span><span class="line"><span class="cl">        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">bn1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">maxpool</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">layer1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">layer2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">layer3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">layer4</span><span class="p">]):</span>
+</span></span><span class="line"><span class="cl">            <span class="c1"># pass through ResNet blocks</span>
+</span></span><span class="line"><span class="cl">            <span class="n">x</span> <span class="o">=</span> <span class="n">block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  
+</span></span><span class="line"><span class="cl">            
+</span></span><span class="line"><span class="cl">            <span class="c1"># append features from each block</span>
+</span></span><span class="line"><span class="cl">            <span class="n">features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># pool the final feature map and compute logits</span>
+</span></span><span class="line"><span class="cl">        <span class="n">pooled</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">adaptive_avg_pool2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>  
+</span></span><span class="line"><span class="cl">        <span class="n">flat</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">pooled</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  
+</span></span><span class="line"><span class="cl">        <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fc</span><span class="p">(</span><span class="n">flat</span><span class="p">)</span>  
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">logits</span><span class="p">,</span> <span class="n">features</span>  
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">project_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">target_shapes</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">        Project student features to match the shapes of teacher features.
+</span></span></span><span class="line"><span class="cl"><span class="s2">        &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">            <span class="n">proj</span><span class="p">(</span><span class="n">s_feat</span><span class="p">,</span> <span class="n">t_shape</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="n">s_feat</span><span class="p">,</span> <span class="n">t_shape</span><span class="p">,</span> <span class="n">proj</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">target_shapes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projections</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">extract_teacher_features</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Extract teacher logits and intermediate features
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># collect intermediate features from ResNet blocks</span>
+</span></span><span class="line"><span class="cl">    <span class="n">features</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">x</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">x</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">bn1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">x</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">x</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">maxpool</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">layer1</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">layer2</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">layer3</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">layer4</span><span class="p">]):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">x</span> <span class="o">=</span> <span class="n">block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">features</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># pool the final feature map and compute logits</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pooled</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">adaptive_avg_pool2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>  <span class="c1"># [B, C, 1, 1]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">flat</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">pooled</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>            <span class="c1"># [B, C]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">logits</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fc</span><span class="p">(</span><span class="n">flat</span><span class="p">)</span>                    <span class="c1"># [B, 10]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">logits</span><span class="p">,</span> <span class="n">features</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># setup models</span>
+</span></span><span class="line"><span class="cl"><span class="n">teacher</span><span class="p">,</span> <span class="n">student_wrapper</span> <span class="o">=</span> <span class="n">setup_models</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</span></span></code></pre></div><h3 id="evaluation-functions-for-size-latency-and-accuracy">Evaluation Functions for Size, Latency and Accuracy<a hidden class="anchor" aria-hidden="true" href="#evaluation-functions-for-size-latency-and-accuracy">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">count_params</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Function to count trainable parameters
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">measure_latency</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="s1">&#39;cuda&#39;</span><span class="p">,</span> <span class="n">repetitions</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Function to measure average inference latency over multiple runs
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">inputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">input_size</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Warm-up</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Measure</span>
+</span></span><span class="line"><span class="cl">        <span class="n">times</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">repetitions</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">            <span class="n">_</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">            <span class="n">times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">times</span><span class="p">)</span> <span class="o">/</span> <span class="n">repetitions</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>  <span class="c1"># ms</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">evaluate_accuracy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dataloader</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Evaluate accuracy given model and loader
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">correct</span><span class="p">,</span> <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">preds</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">correct</span> <span class="o">+=</span> <span class="p">(</span><span class="n">preds</span> <span class="o">==</span> <span class="n">labels</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">            <span class="n">total</span> <span class="o">+=</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">accuracy</span> <span class="o">=</span> <span class="n">correct</span> <span class="o">/</span> <span class="n">total</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">accuracy</span>
+</span></span></code></pre></div><h3 id="fine-tuning-the-teacher">Fine-tuning the Teacher<a hidden class="anchor" aria-hidden="true" href="#fine-tuning-the-teacher">#</a></h3>
+<blockquote>
+<p><strong>Note</strong>: This fine-tuning is required only in this example since the ResNet50 network was pretrained on ImageNet1K and we need to replace its output layer to match to CIFAR-10.</p></blockquote>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">train_teacher</span><span class="p">(</span><span class="n">teacher</span><span class="p">,</span> <span class="n">loader</span><span class="p">,</span> <span class="n">epochs</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="s2">&#34;model.pth&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Trains a model with Adam and cross-entropy loss.
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Loads from save_path if it exists.
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">save_path</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Model already trained. Loading from </span><span class="si">{</span><span class="n">save_path</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">teacher</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">save_path</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">teacher</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># no saved model found. training from given model state</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">teacher</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">teacher</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">loader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">logits</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">extract_teacher_features</span><span class="p">(</span><span class="n">teacher</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="n">loss</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">cross_entropy</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">            <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">            <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">accuracy</span> <span class="o">=</span> <span class="n">evaluate_accuracy</span><span class="p">(</span><span class="n">teacher</span><span class="p">,</span> <span class="n">val_loader</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;(</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s2">)</span><span class="se">\t</span><span class="s2">Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: loss=</span><span class="si">{</span><span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, Accuracy (validation): </span><span class="si">{</span><span class="n">accuracy</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">teacher</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">save_path</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">teacher</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">save_path</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Training complete. Model saved to </span><span class="si">{</span><span class="n">save_path</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">teacher</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># train the teacher on CIFAR-10</span>
+</span></span><span class="line"><span class="cl"><span class="n">teacher</span> <span class="o">=</span> <span class="n">train_teacher</span><span class="p">(</span><span class="n">teacher</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s2">&#34;Fine-tuning teacher&#34;</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="s2">&#34;tuned_pretrained_resnet50_on_CIFAR10.pth&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>Output:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">(Fine-tuning teacher)	Epoch 1: loss=0.4818, Accuracy (validation): 81.60%
+</span></span><span class="line"><span class="cl">(Fine-tuning teacher)	Epoch 2: loss=0.6269, Accuracy (validation): 81.70%
+</span></span><span class="line"><span class="cl">(Fine-tuning teacher)	Epoch 3: loss=0.2588, Accuracy (validation): 82.72%
+</span></span><span class="line"><span class="cl">(Fine-tuning teacher)	Epoch 4: loss=0.2500, Accuracy (validation): 82.88%
+</span></span><span class="line"><span class="cl">(Fine-tuning teacher)	Epoch 5: loss=0.1956, Accuracy (validation): 83.52%
+</span></span><span class="line"><span class="cl">...
+</span></span><span class="line"><span class="cl">(Fine-tuning teacher)	Epoch 25: loss=0.0483, Accuracy (validation): 84.14%
+</span></span><span class="line"><span class="cl">Training complete. Model saved to tuned_pretrained_resnet50_on_CIFAR10.pth
+</span></span></code></pre></div><h3 id="training-the-student-via-distillation">Training the Student via Distillation<a hidden class="anchor" aria-hidden="true" href="#training-the-student-via-distillation">#</a></h3>
+<p>The distillation loss is calculated with KL divergence on the student logits and teacher logits</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">distillation_loss</span><span class="p">(</span><span class="n">student_logits</span><span class="p">,</span> <span class="n">teacher_logits</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Combine soft and hard targets using KL divergence and cross-entropy
+</span></span></span><span class="line"><span class="cl"><span class="s2">    T = temperature, alpha = weighting between soft and hard losses
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># soft target loss (teacher softmax vs student softmax)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">soft_targets</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">kl_div</span><span class="p">(</span>
+</span></span><span class="line"><span class="cl">        <span class="n">F</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">student_logits</span> <span class="o">/</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">        <span class="n">F</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">teacher_logits</span> <span class="o">/</span> <span class="n">T</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">        <span class="n">reduction</span><span class="o">=</span><span class="s1">&#39;batchmean&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">T</span> <span class="o">*</span> <span class="n">T</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># hard label loss</span>
+</span></span><span class="line"><span class="cl">    <span class="n">hard_loss</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">cross_entropy</span><span class="p">(</span><span class="n">student_logits</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">soft_targets</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">hard_loss</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">student_training_step</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">teacher</span><span class="p">,</span> <span class="n">student_wrapper</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Perform a single training step for the student model using knowledge distillation.
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># extract teacher logits and intermediate features</span>
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">        <span class="n">teacher_logits</span><span class="p">,</span> <span class="n">teacher_feats</span> <span class="o">=</span> <span class="n">extract_teacher_features</span><span class="p">(</span><span class="n">teacher</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># extract student logits and intermediate features</span>
+</span></span><span class="line"><span class="cl">    <span class="n">student_logits</span><span class="p">,</span> <span class="n">student_feats</span> <span class="o">=</span> <span class="n">student_wrapper</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">projected_feats</span> <span class="o">=</span> <span class="n">student_wrapper</span><span class="o">.</span><span class="n">project_features</span><span class="p">(</span><span class="n">student_feats</span><span class="p">,</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">shape</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">teacher_feats</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1"># calculate loss from features difference</span>
+</span></span><span class="line"><span class="cl">    <span class="n">feat_loss</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">projected_feats</span><span class="p">,</span> <span class="n">teacher_feats</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># calculate loss from output distribution, and include feature loss</span>
+</span></span><span class="line"><span class="cl">    <span class="n">loss</span> <span class="o">=</span> <span class="n">distillation_loss</span><span class="p">(</span><span class="n">student_logits</span><span class="p">,</span> <span class="n">teacher_logits</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">feat_loss</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># optimize with loss</span>
+</span></span><span class="line"><span class="cl">    <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">train_student</span><span class="p">(</span><span class="n">teacher</span><span class="p">,</span> <span class="n">student_wrapper</span><span class="p">,</span> <span class="n">dataloader</span><span class="p">,</span> <span class="n">epochs</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="s2">&#34;student_distilled.pth&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">    Trains a student model using knowledge distillation from a teacher model.
+</span></span></span><span class="line"><span class="cl"><span class="s2">    &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># setup optimizer</span>
+</span></span><span class="line"><span class="cl">    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">student_wrapper</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># train the student using the teacher&#39;s output as soft targets</span>
+</span></span><span class="line"><span class="cl">    <span class="n">teacher</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>  
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">best_val_acc</span> <span class="o">=</span> <span class="mf">0.0</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1"># reduce LR if validation loss doesn&#39;t improve for 3 epochs</span>
+</span></span><span class="line"><span class="cl">    <span class="n">scheduler</span> <span class="o">=</span> <span class="n">ReduceLROnPlateau</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">student_wrapper</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="n">running_loss</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">loss</span> <span class="o">=</span> <span class="n">student_training_step</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">teacher</span><span class="p">,</span> <span class="n">student_wrapper</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">running_loss</span> <span class="o">+=</span> <span class="n">loss</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">val_acc</span> <span class="o">=</span> <span class="n">evaluate_accuracy</span><span class="p">(</span><span class="n">student_wrapper</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">val_loader</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;[(Training student)</span><span class="se">\t</span><span class="s2">Epoch </span><span class="si">{</span><span class="n">epoch</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">] Loss = </span><span class="si">{</span><span class="n">running_loss</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">dataloader</span><span class="p">)</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> | Val Acc = </span><span class="si">{</span><span class="n">val_acc</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1"># save best checkpoint</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">val_acc</span> <span class="o">&gt;</span> <span class="n">best_val_acc</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">best_val_acc</span> <span class="o">=</span> <span class="n">val_acc</span>
+</span></span><span class="line"><span class="cl">            <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">student_wrapper</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">save_path</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;New best model saved.&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># load best checkpoint</span>
+</span></span><span class="line"><span class="cl">    <span class="n">student_wrapper</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">save_path</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="n">student</span> <span class="o">=</span> <span class="n">student_wrapper</span><span class="o">.</span><span class="n">model</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">student</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># trigger student training</span>
+</span></span><span class="line"><span class="cl"><span class="n">student</span> <span class="o">=</span> <span class="n">train_student</span><span class="p">(</span><span class="n">teacher</span><span class="p">,</span> <span class="n">student_wrapper</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">epochs</span> <span class="o">=</span> <span class="mi">25</span><span class="p">)</span>
+</span></span></code></pre></div><p>Output:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">[(Training student)	Epoch 1] Loss = 8.7847 | Val Acc = 60.02%
+</span></span><span class="line"><span class="cl">New best model saved.
+</span></span><span class="line"><span class="cl">[(Training student)	Epoch 2] Loss = 5.9411 | Val Acc = 65.92%
+</span></span><span class="line"><span class="cl">New best model saved.
+</span></span><span class="line"><span class="cl">[(Training student)	Epoch 3] Loss = 4.8069 | Val Acc = 69.38%
+</span></span><span class="line"><span class="cl">New best model saved.
+</span></span><span class="line"><span class="cl">[(Training student)	Epoch 4] Loss = 4.0791 | Val Acc = 71.84%
+</span></span><span class="line"><span class="cl">New best model saved.
+</span></span><span class="line"><span class="cl">[(Training student)	Epoch 5] Loss = 3.4702 | Val Acc = 74.46%
+</span></span><span class="line"><span class="cl">New best model saved.
+</span></span><span class="line"><span class="cl">...
+</span></span><span class="line"><span class="cl">[(Training student)	Epoch 20] Loss = 0.3931 | Val Acc = 78.62%
+</span></span></code></pre></div><h3 id="model-comparison-code">Model Comparison Code<a hidden class="anchor" aria-hidden="true" href="#model-comparison-code">#</a></h3>
+<p>Finally we check the size of the teacher and student models, their latency and accuracy on test set.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># compare size, latency, and accuracy</span>
+</span></span><span class="line"><span class="cl"><span class="n">teacher_params</span> <span class="o">=</span> <span class="n">count_params</span><span class="p">(</span><span class="n">teacher</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">student_params</span> <span class="o">=</span> <span class="n">count_params</span><span class="p">(</span><span class="n">student</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">teacher_latency</span> <span class="o">=</span> <span class="n">measure_latency</span><span class="p">(</span><span class="n">teacher</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">student_latency</span> <span class="o">=</span> <span class="n">measure_latency</span><span class="p">(</span><span class="n">student</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">teacher_acc</span> <span class="o">=</span> <span class="n">evaluate_accuracy</span><span class="p">(</span><span class="n">teacher</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">student_acc</span> <span class="o">=</span> <span class="n">evaluate_accuracy</span><span class="p">(</span><span class="n">student</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Teacher Params: </span><span class="si">{</span><span class="n">teacher_params</span> <span class="o">/</span> <span class="mf">1e6</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">M&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Student Params: </span><span class="si">{</span><span class="n">student_params</span> <span class="o">/</span> <span class="mf">1e6</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">M&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Teacher Latency: </span><span class="si">{</span><span class="n">teacher_latency</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ms&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Student Latency: </span><span class="si">{</span><span class="n">student_latency</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ms&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Teacher Test Accuracy: </span><span class="si">{</span><span class="n">teacher_acc</span> <span class="o">*</span> <span class="mi">100</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Student Test Accuracy: </span><span class="si">{</span><span class="n">student_acc</span> <span class="o">*</span> <span class="mi">100</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>Output:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Teacher Params: 23.53M
+</span></span><span class="line"><span class="cl">Student Params: 11.18M
+</span></span><span class="line"><span class="cl">Teacher Latency: 3.82 ms
+</span></span><span class="line"><span class="cl">Student Latency: 1.54 ms
+</span></span><span class="line"><span class="cl">Teacher Test Accuracy: 85.10%
+</span></span><span class="line"><span class="cl">Student Test Accuracy: 79.24%
+</span></span></code></pre></div><h3 id="training-a-baseline-student-resnet18-from-scratch">Training a baseline student (ResNet18 from scratch)<a hidden class="anchor" aria-hidden="true" href="#training-a-baseline-student-resnet18-from-scratch">#</a></h3>
+<p>Although the student model is half the size and 40% the latency of the teacher model, its accuracy dropped from 85.10% to 79.24%. To determine whether this is still a better approach compared to training the student model directly on the data, we trained another student model for the same number of epochs without using knowledge distillation. We refer to this model as the &ldquo;baseline student&rdquo;.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># define baseline student: ResNet18 training from scratch on its own, re-headed for CIFAR-10</span>
+</span></span><span class="line"><span class="cl"><span class="n">baseline_student</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">resnet18</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">baseline_student</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">baseline_student</span> <span class="o">=</span> <span class="n">baseline_student</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Train the baseline student on CIFAR-10</span>
+</span></span><span class="line"><span class="cl"><span class="n">baseline_student</span> <span class="o">=</span> <span class="n">train_teacher</span><span class="p">(</span><span class="n">baseline_student</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s2">&#34;baseline-student&#34;</span><span class="p">,</span> <span class="n">save_path</span><span class="o">=</span><span class="s2">&#34;baseline_student.pth&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Evaluate baseline student</span>
+</span></span><span class="line"><span class="cl"><span class="n">baseline_student_acc</span> <span class="o">=</span> <span class="n">evaluate_accuracy</span><span class="p">(</span><span class="n">baseline_student</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">Baseline Student Test Accuracy: </span><span class="si">{</span><span class="n">baseline_student_acc</span> <span class="o">*</span> <span class="mi">100</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>Output:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">(baseline-student)	Epoch 1: loss=1.0124, Accuracy (Epoch 1): 58.06%
+</span></span><span class="line"><span class="cl">(baseline-student)	Epoch 2: loss=0.8091, Accuracy (Epoch 2): 63.10%
+</span></span><span class="line"><span class="cl">(baseline-student)	Epoch 3: loss=0.8210, Accuracy (Epoch 3): 68.06%
+</span></span><span class="line"><span class="cl">(baseline-student)	Epoch 4: loss=0.7438, Accuracy (Epoch 4): 68.74%
+</span></span><span class="line"><span class="cl">(baseline-student)	Epoch 5: loss=0.8731, Accuracy (Epoch 5): 71.18%
+</span></span><span class="line"><span class="cl">...
+</span></span><span class="line"><span class="cl">(baseline-student)	Epoch 25: loss=0.0202, Accuracy (Epoch 25): 74.10%
+</span></span><span class="line"><span class="cl">Training complete. Model saved to baseline_student.pth
+</span></span><span class="line"><span class="cl">Saved fine-tuned teacher.
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">Baseline Student Test Accuracy: 74.10%
+</span></span></code></pre></div><h2 id="does-knowledge-distillation-help">Does Knowledge Distillation Help?<a hidden class="anchor" aria-hidden="true" href="#does-knowledge-distillation-help">#</a></h2>
+<p>Training a baseline student model for the same number of epochs, without leveraging knowledge distillation, results in a test accuracy of <strong>74.10%</strong>. In contrast, the distilled student achieves a significantly higher test accuracy of <strong>79.24%</strong>. This represents a notable improvement of <strong>5.14 percentage points</strong>, achieved without any increase in model size or latency.</p>
+<p>This shows that while the student has lower capacity than the teacher, distillation helps it generalize better by learning not just from ground-truth labels, but also from the richer output distribution of the teacher. The teacher’s &ldquo;dark knowledge&rdquo; encodes class similarities and decision boundaries that the student wouldn’t otherwise see.</p>
+<p>Even when both models are trained on the same data, distillation acts as a form of regularization, guiding the student with softer, more informative targets. This helps the student generalize better than it would by learning from hard labels alone, effectively helping a smaller model punch above its weight.</p>
+<h3 id="model-comparison-table">Model Comparison Table<a hidden class="anchor" aria-hidden="true" href="#model-comparison-table">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>Model</th>
+          <th>Parameters</th>
+          <th>Latency (ms)</th>
+          <th>Accuracy (approx)</th>
+          <th>How it was trained?</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>ResNet50 (teacher)</td>
+          <td>23.53M</td>
+          <td>3.82 ms</td>
+          <td>85.10%</td>
+          <td>Fine-tuned on CIFAR</td>
+      </tr>
+      <tr>
+          <td><strong>ResNet18 (distilled student)</strong></td>
+          <td><strong>11.18M</strong></td>
+          <td><strong>1.54 ms</strong></td>
+          <td><strong>79.24%</strong></td>
+          <td><strong>Knowledge distillation</strong></td>
+      </tr>
+      <tr>
+          <td>ResNet18 (baseline student)</td>
+          <td>11.18M</td>
+          <td>1.54 ms</td>
+          <td>74.10%</td>
+          <td>Trained directly</td>
+      </tr>
+  </tbody>
+</table>
+<h3 id="summary">Summary<a hidden class="anchor" aria-hidden="true" href="#summary">#</a></h3>
+<ul>
+<li><strong>Knowledge distillation</strong> is an elegant technique to train smaller models with guidance from larger ones.</li>
+<li>The use of <strong>softened outputs</strong> via temperature scaling helps the student capture richer information.</li>
+<li>Internal representations can be leveraged to establish a stronger connection between the teacher and student models, potentially enhancing the student&rsquo;s performance.</li>
+<li>This method works well in practice to compress models for deployment without drastically sacrificing performance.</li>
+</ul>
+<hr>
+<h2 id="references">References<a hidden class="anchor" aria-hidden="true" href="#references">#</a></h2>
+<ul>
+<li><a href="https://arxiv.org/abs/1503.02531">Distilling the Knowledge in a Neural Network - Hinton et al.</a></li>
+<li><a href="https://pytorch.org/vision/stable/models.html">TorchVision ResNet &amp; MobileNet</a></li>
+</ul>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+<nav class="paginav">
+  <a class="next" href="https://arikpoz.github.io/posts/2025-04-16-neural-network-quantization-in-pytorch/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Neural Network Quantization in PyTorch</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Knowledge Distillation in PyTorch: Shrinking Neural Networks the Smart Way on x"
+            href="https://x.com/intent/tweet/?text=Knowledge%20Distillation%20in%20PyTorch%3a%20Shrinking%20Neural%20Networks%20the%20Smart%20Way&amp;url=https%3a%2f%2farikpoz.github.io%2fposts%2f2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way%2f&amp;hashtags=">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Knowledge Distillation in PyTorch: Shrinking Neural Networks the Smart Way on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2farikpoz.github.io%2fposts%2f2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way%2f&amp;title=Knowledge%20Distillation%20in%20PyTorch%3a%20Shrinking%20Neural%20Networks%20the%20Smart%20Way&amp;summary=Knowledge%20Distillation%20in%20PyTorch%3a%20Shrinking%20Neural%20Networks%20the%20Smart%20Way&amp;source=https%3a%2f%2farikpoz.github.io%2fposts%2f2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Knowledge Distillation in PyTorch: Shrinking Neural Networks the Smart Way on reddit"
+            href="https://reddit.com/submit?url=https%3a%2f%2farikpoz.github.io%2fposts%2f2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way%2f&title=Knowledge%20Distillation%20in%20PyTorch%3a%20Shrinking%20Neural%20Networks%20the%20Smart%20Way">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Knowledge Distillation in PyTorch: Shrinking Neural Networks the Smart Way on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2farikpoz.github.io%2fposts%2f2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Knowledge Distillation in PyTorch: Shrinking Neural Networks the Smart Way on whatsapp"
+            href="https://api.whatsapp.com/send?text=Knowledge%20Distillation%20in%20PyTorch%3a%20Shrinking%20Neural%20Networks%20the%20Smart%20Way%20-%20https%3a%2f%2farikpoz.github.io%2fposts%2f2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Knowledge Distillation in PyTorch: Shrinking Neural Networks the Smart Way on telegram"
+            href="https://telegram.me/share/url?text=Knowledge%20Distillation%20in%20PyTorch%3a%20Shrinking%20Neural%20Networks%20the%20Smart%20Way&amp;url=https%3a%2f%2farikpoz.github.io%2fposts%2f2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Knowledge Distillation in PyTorch: Shrinking Neural Networks the Smart Way on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Knowledge%20Distillation%20in%20PyTorch%3a%20Shrinking%20Neural%20Networks%20the%20Smart%20Way&u=https%3a%2f%2farikpoz.github.io%2fposts%2f2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="https://arikpoz.github.io/">Practical ML</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

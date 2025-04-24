@@ -9,10 +9,20 @@
       <url>https://arikpoz.github.io/images/papermod-cover.png</url>
       <link>https://arikpoz.github.io/images/papermod-cover.png</link>
     </image>
-    <generator>Hugo -- 0.146.5</generator>
+    <generator>Hugo -- 0.146.7</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 16 Apr 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 24 Apr 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://arikpoz.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Knowledge Distillation in PyTorch: Shrinking Neural Networks the Smart Way</title>
+      <link>https://arikpoz.github.io/posts/2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way/</link>
+      <pubDate>Thu, 24 Apr 2025 00:00:00 +0000</pubDate>
+      <guid>https://arikpoz.github.io/posts/2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way/</guid>
+      <description>&lt;p&gt;&lt;img alt=&#34;&amp;ldquo;A glowing teacher neural network transferring knowledge to a smaller student model, with the title &amp;lsquo;Knowledge Distillation&amp;rsquo; overlaid.&amp;rdquo;&#34; loading=&#34;lazy&#34; src=&#34;https://arikpoz.github.io/posts/2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way/lead-image.jpg&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;introduction&#34;&gt;Introduction&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;What if your model could run twice as fast and use half the memory, without giving up much accuracy?&lt;/strong&gt;&lt;br&gt;
+This is the promise of &lt;strong&gt;knowledge distillation&lt;/strong&gt;: training smaller, faster models to mimic larger, high-performing ones. In this post, we’ll walk through how to distill a powerful ResNet50 model into a lightweight ResNet18 and demonstrate a &lt;strong&gt;+5% boost in accuracy&lt;/strong&gt; compared to training the smaller model from scratch, all while cutting inference latency by over &lt;strong&gt;50%&lt;/strong&gt;.&lt;/p&gt;</description>
+    </item>
     <item>
       <title>Neural Network Quantization in PyTorch</title>
       <link>https://arikpoz.github.io/posts/2025-04-16-neural-network-quantization-in-pytorch/</link>
