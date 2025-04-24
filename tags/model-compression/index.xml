@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
-    <title>Machine-Learning on Practical ML</title>
-    <link>https://arikpoz.github.io/tags/machine-learning/</link>
-    <description>Recent content in Machine-Learning on Practical ML</description>
+    <title>Model-Compression on Practical ML</title>
+    <link>https://arikpoz.github.io/tags/model-compression/</link>
+    <description>Recent content in Model-Compression on Practical ML</description>
     <image>
       <title>Practical ML</title>
       <url>https://arikpoz.github.io/images/papermod-cover.png</url>
@@ -12,7 +12,7 @@
     <generator>Hugo -- 0.146.7</generator>
     <language>en</language>
     <lastBuildDate>Thu, 24 Apr 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://arikpoz.github.io/tags/machine-learning/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://arikpoz.github.io/tags/model-compression/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Knowledge Distillation in PyTorch: Shrinking Neural Networks the Smart Way</title>
       <link>https://arikpoz.github.io/posts/2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way/</link>
@@ -45,15 +45,6 @@ This is the promise of &lt;strong&gt;knowledge distillation&lt;/strong&gt;: trai
 &lt;p&gt;In this post, I will demonstrate how to use pruning to &lt;strong&gt;significantly reduce a model&amp;rsquo;s size and latency&lt;/strong&gt; while maintaining minimal accuracy loss. In the example, we achieve a &lt;strong&gt;90% reduction in model size&lt;/strong&gt; and &lt;strong&gt;5.5x faster inference time&lt;/strong&gt;, all while preserving the same level of accuracy.&lt;/p&gt;</description>
     </item>
     <item>
-      <title>Fast Image Loading with NVIDIA nvImageCodec</title>
-      <link>https://arikpoz.github.io/posts/2025-04-07-fast-image-loading-with-nvidia-nvimagecodec/</link>
-      <pubDate>Mon, 07 Apr 2025 00:00:00 +0000</pubDate>
-      <guid>https://arikpoz.github.io/posts/2025-04-07-fast-image-loading-with-nvidia-nvimagecodec/</guid>
-      <description>&lt;p&gt;&lt;img alt=&#34;OpenCV turtle loses the race with nvImageCodec rabbit&#34; loading=&#34;lazy&#34; src=&#34;https://arikpoz.github.io/posts/2025-04-07-fast-image-loading-with-nvidia-nvimagecodec/lead-image.jpg&#34;&gt;&lt;/p&gt;
-&lt;h2 id=&#34;introduction&#34;&gt;&lt;strong&gt;Introduction&lt;/strong&gt;&lt;/h2&gt;
-&lt;p&gt;In deep learning pipelines, especially those involving image data, &lt;strong&gt;data loading and preprocessing&lt;/strong&gt; often become major bottlenecks. Traditionally, image decoding is performed using libraries like &lt;a href=&#34;https://docs.opencv.org/4.x/index.html&#34;&gt;OpenCV&lt;/a&gt; or &lt;a href=&#34;https://pillow.readthedocs.io/en/stable/&#34;&gt;Pillow&lt;/a&gt;, which rely on CPU-based processing. After decoding, the data must be transferred to GPU memory for further operations. But what if the decoding process itself could be performed directly on the GPU? Could this lead to faster performance?&lt;/p&gt;</description>
-    </item>
-    <item>
       <title>Introduction to Model Compression: Why and How to Shrink Neural Networks for Speed</title>
       <link>https://arikpoz.github.io/posts/2025-04-02-introduction-to-model-compression-why-and-how-to-shrink-neural-networks-for-speed/</link>
       <pubDate>Wed, 02 Apr 2025 00:00:00 +0000</pubDate>
@@ -62,16 +53,6 @@ This is the promise of &lt;strong&gt;knowledge distillation&lt;/strong&gt;: trai
 &lt;h2 id=&#34;introduction&#34;&gt;&lt;strong&gt;Introduction&lt;/strong&gt;&lt;/h2&gt;
 &lt;p&gt;Deep learning models have grown increasingly large and complex, enabling state-of-the-art performance in tasks such as image recognition, natural language processing, and generative AI. However, these large models often come with high computational costs, making them slow to run on edge devices, embedded systems, or even in cloud environments with strict latency requirements.&lt;/p&gt;
 &lt;p&gt;Model compression techniques aim to reduce the size and computational requirements of neural networks while maintaining their accuracy. This enables faster inference, lower power consumption, and better deployment flexibility. In this post, we’ll explore why model compression is essential and provide an overview of four key techniques: &lt;strong&gt;pruning, quantization, knowledge distillation, and low-rank factorization&lt;/strong&gt;.&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>How to Make Your Neural Network Run Faster: An Overview of Optimization Techniques</title>
-      <link>https://arikpoz.github.io/posts/2025-03-30-how-to-make-your-neural-network-run-faster-an-overview-of-optimization-techniques/</link>
-      <pubDate>Sun, 30 Mar 2025 00:00:00 +0000</pubDate>
-      <guid>https://arikpoz.github.io/posts/2025-03-30-how-to-make-your-neural-network-run-faster-an-overview-of-optimization-techniques/</guid>
-      <description>&lt;p&gt;&lt;img alt=&#34;Illustration of a neural network transforming into a faster, optimized version&#34; loading=&#34;lazy&#34; src=&#34;https://arikpoz.github.io/posts/2025-03-30-how-to-make-your-neural-network-run-faster-an-overview-of-optimization-techniques/lead-image.jpg&#34;&gt;&lt;/p&gt;
-&lt;h2 id=&#34;introduction&#34;&gt;&lt;strong&gt;Introduction&lt;/strong&gt;&lt;/h2&gt;
-&lt;p&gt;Neural networks are becoming increasingly powerful, but speed remains a crucial factor in real-world applications. Whether you&amp;rsquo;re running models on the cloud, edge devices, or personal hardware, optimizing them for speed can lead to faster inference, lower latency, and reduced resource consumption.&lt;/p&gt;
-&lt;p&gt;In this post, we&amp;rsquo;ll explore various techniques to accelerate neural networks, from model compression to hardware optimizations. This will serve as a foundation for future deep dives into each method.&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

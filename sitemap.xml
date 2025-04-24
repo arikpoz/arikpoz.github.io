@@ -2,7 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://arikpoz.github.io/tags/deep-learning/</loc>
+    <lastmod>2025-04-24T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>https://arikpoz.github.io/posts/2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way/</loc>
+    <lastmod>2025-04-24T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/tags/knowledge-distillation/</loc>
+    <lastmod>2025-04-24T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/tags/machine-learning/</loc>
+    <lastmod>2025-04-24T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/tags/model-compression/</loc>
+    <lastmod>2025-04-24T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/tags/optimization/</loc>
     <lastmod>2025-04-24T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://arikpoz.github.io/posts/</loc>
@@ -11,25 +26,34 @@
     <loc>https://arikpoz.github.io/</loc>
     <lastmod>2025-04-24T00:00:00+00:00</lastmod>
   </url><url>
+    <loc>https://arikpoz.github.io/tags/pytorch/</loc>
+    <lastmod>2025-04-24T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/tags/</loc>
+    <lastmod>2025-04-24T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>https://arikpoz.github.io/posts/2025-04-16-neural-network-quantization-in-pytorch/</loc>
+    <lastmod>2025-04-16T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/tags/quantization/</loc>
     <lastmod>2025-04-16T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://arikpoz.github.io/posts/2025-04-10-neural-network-pruning-how-to-accelerate-inference-with-minimal-accuracy-loss/</loc>
     <lastmod>2025-04-10T00:00:00+00:00</lastmod>
   </url><url>
+    <loc>https://arikpoz.github.io/tags/pruning/</loc>
+    <lastmod>2025-04-10T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://arikpoz.github.io/tags/data-loading/</loc>
+    <lastmod>2025-04-07T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>https://arikpoz.github.io/posts/2025-04-07-fast-image-loading-with-nvidia-nvimagecodec/</loc>
     <lastmod>2025-04-07T00:00:00+00:00</lastmod>
   </url><url>
+    <loc>https://arikpoz.github.io/tags/nvidia/</loc>
+    <lastmod>2025-04-07T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>https://arikpoz.github.io/posts/2025-04-02-introduction-to-model-compression-why-and-how-to-shrink-neural-networks-for-speed/</loc>
-    <lastmod>2025-04-02T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://arikpoz.github.io/tags/machine-learning/</loc>
-    <lastmod>2025-04-02T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://arikpoz.github.io/tags/optimization/</loc>
-    <lastmod>2025-04-02T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://arikpoz.github.io/tags/</loc>
     <lastmod>2025-04-02T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://arikpoz.github.io/posts/2025-03-30-how-to-make-your-neural-network-run-faster-an-overview-of-optimization-techniques/</loc>

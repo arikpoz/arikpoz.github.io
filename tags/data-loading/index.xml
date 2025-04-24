@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Data-Loading on Practical ML</title>
+    <link>https://arikpoz.github.io/tags/data-loading/</link>
+    <description>Recent content in Data-Loading on Practical ML</description>
+    <image>
+      <title>Practical ML</title>
+      <url>https://arikpoz.github.io/images/papermod-cover.png</url>
+      <link>https://arikpoz.github.io/images/papermod-cover.png</link>
+    </image>
+    <generator>Hugo -- 0.146.7</generator>
+    <language>en</language>
+    <lastBuildDate>Mon, 07 Apr 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://arikpoz.github.io/tags/data-loading/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Fast Image Loading with NVIDIA nvImageCodec</title>
+      <link>https://arikpoz.github.io/posts/2025-04-07-fast-image-loading-with-nvidia-nvimagecodec/</link>
+      <pubDate>Mon, 07 Apr 2025 00:00:00 +0000</pubDate>
+      <guid>https://arikpoz.github.io/posts/2025-04-07-fast-image-loading-with-nvidia-nvimagecodec/</guid>
+      <description>&lt;p&gt;&lt;img alt=&#34;OpenCV turtle loses the race with nvImageCodec rabbit&#34; loading=&#34;lazy&#34; src=&#34;https://arikpoz.github.io/posts/2025-04-07-fast-image-loading-with-nvidia-nvimagecodec/lead-image.jpg&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;introduction&#34;&gt;&lt;strong&gt;Introduction&lt;/strong&gt;&lt;/h2&gt;
+&lt;p&gt;In deep learning pipelines, especially those involving image data, &lt;strong&gt;data loading and preprocessing&lt;/strong&gt; often become major bottlenecks. Traditionally, image decoding is performed using libraries like &lt;a href=&#34;https://docs.opencv.org/4.x/index.html&#34;&gt;OpenCV&lt;/a&gt; or &lt;a href=&#34;https://pillow.readthedocs.io/en/stable/&#34;&gt;Pillow&lt;/a&gt;, which rely on CPU-based processing. After decoding, the data must be transferred to GPU memory for further operations. But what if the decoding process itself could be performed directly on the GPU? Could this lead to faster performance?&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
-    <title>Machine-Learning on Practical ML</title>
-    <link>https://arikpoz.github.io/tags/machine-learning/</link>
-    <description>Recent content in Machine-Learning on Practical ML</description>
+    <title>Deep-Learning on Practical ML</title>
+    <link>https://arikpoz.github.io/tags/deep-learning/</link>
+    <description>Recent content in Deep-Learning on Practical ML</description>
     <image>
       <title>Practical ML</title>
       <url>https://arikpoz.github.io/images/papermod-cover.png</url>
@@ -12,7 +12,7 @@
     <generator>Hugo -- 0.146.7</generator>
     <language>en</language>
     <lastBuildDate>Thu, 24 Apr 2025 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://arikpoz.github.io/tags/machine-learning/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://arikpoz.github.io/tags/deep-learning/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Knowledge Distillation in PyTorch: Shrinking Neural Networks the Smart Way</title>
       <link>https://arikpoz.github.io/posts/2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way/</link>
