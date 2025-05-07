@@ -143,7 +143,7 @@ Model compression techniques aim to reduce the size and computational requiremen
     <h1 class="post-title entry-hint-parent">
       Introduction to Model Compression: Why and How to Shrink Neural Networks for Speed
     </h1>
-    <div class="post-meta"><span title='2025-04-02 00:00:00 +0000 UTC'>April 2, 2025</span>&nbsp;·&nbsp;4 min&nbsp;·&nbsp;Arik Poznanski
+    <div class="post-meta"><span title='2025-04-02 00:00:00 +0000 UTC'>April 2, 2025</span>&nbsp;·&nbsp;5 min&nbsp;·&nbsp;Arik Poznanski
 
 </div>
   </header> <div class="toc">
@@ -163,9 +163,11 @@ Model compression techniques aim to reduce the size and computational requiremen
                 <li>
                     <a href="#what-is-pruning" aria-label="What is Pruning?">What is Pruning?</a></li>
                 <li>
-                    <a href="#types-of-pruning" aria-label="Types of Pruning:">Types of Pruning:</a></li>
+                    <a href="#types-of-pruning" aria-label="Types of Pruning">Types of Pruning</a></li>
                 <li>
-                    <a href="#use-cases-and-benefits" aria-label="Use Cases and Benefits:">Use Cases and Benefits:</a></li></ul>
+                    <a href="#use-cases-and-benefits" aria-label="Use Cases and Benefits">Use Cases and Benefits</a></li>
+                <li>
+                    <a href="#further-reading" aria-label="Further Reading">Further Reading</a></li></ul>
                 </li>
                 <li>
                     <a href="#2-quantization-reducing-precision-for-faster-computation" aria-label="2. Quantization: Reducing Precision for Faster Computation">2. Quantization: Reducing Precision for Faster Computation</a><ul>
@@ -173,9 +175,11 @@ Model compression techniques aim to reduce the size and computational requiremen
                 <li>
                     <a href="#what-is-quantization" aria-label="What is Quantization?">What is Quantization?</a></li>
                 <li>
-                    <a href="#types-of-quantization" aria-label="Types of Quantization:">Types of Quantization:</a></li>
+                    <a href="#types-of-quantization" aria-label="Types of Quantization">Types of Quantization</a></li>
                 <li>
-                    <a href="#use-cases-and-benefits-1" aria-label="Use Cases and Benefits:">Use Cases and Benefits:</a></li></ul>
+                    <a href="#use-cases-and-benefits-1" aria-label="Use Cases and Benefits">Use Cases and Benefits</a></li>
+                <li>
+                    <a href="#further-reading-1" aria-label="Further Reading">Further Reading</a></li></ul>
                 </li>
                 <li>
                     <a href="#3-knowledge-distillation-training-small-models-using-large-models" aria-label="3. Knowledge Distillation: Training Small Models Using Large Models">3. Knowledge Distillation: Training Small Models Using Large Models</a><ul>
@@ -183,9 +187,11 @@ Model compression techniques aim to reduce the size and computational requiremen
                 <li>
                     <a href="#what-is-knowledge-distillation" aria-label="What is Knowledge Distillation?">What is Knowledge Distillation?</a></li>
                 <li>
-                    <a href="#types-of-knowledge-distillation" aria-label="Types of Knowledge Distillation:">Types of Knowledge Distillation:</a></li>
+                    <a href="#types-of-knowledge-distillation" aria-label="Types of Knowledge Distillation">Types of Knowledge Distillation</a></li>
                 <li>
-                    <a href="#use-cases-and-benefits-2" aria-label="Use Cases and Benefits:">Use Cases and Benefits:</a></li></ul>
+                    <a href="#use-cases-and-benefits-2" aria-label="Use Cases and Benefits">Use Cases and Benefits</a></li>
+                <li>
+                    <a href="#further-reading-2" aria-label="Further Reading">Further Reading</a></li></ul>
                 </li>
                 <li>
                     <a href="#4-low-rank-factorization-decomposing-weights-for-efficiency" aria-label="4. Low-Rank Factorization: Decomposing Weights for Efficiency">4. Low-Rank Factorization: Decomposing Weights for Efficiency</a><ul>
@@ -193,9 +199,11 @@ Model compression techniques aim to reduce the size and computational requiremen
                 <li>
                     <a href="#what-is-low-rank-factorization" aria-label="What is Low-Rank Factorization?">What is Low-Rank Factorization?</a></li>
                 <li>
-                    <a href="#methods-of-factorization" aria-label="Methods of Factorization:">Methods of Factorization:</a></li>
+                    <a href="#methods-of-factorization" aria-label="Methods of Factorization">Methods of Factorization</a></li>
                 <li>
-                    <a href="#use-cases-and-benefits-3" aria-label="Use Cases and Benefits:">Use Cases and Benefits:</a></li></ul>
+                    <a href="#use-cases-and-benefits-3" aria-label="Use Cases and Benefits">Use Cases and Benefits</a></li>
+                <li>
+                    <a href="#further-reading-3" aria-label="Further Reading">Further Reading</a></li></ul>
                 </li>
                 <li>
                     <a href="#choosing-the-right-compression-method" aria-label="Choosing the Right Compression Method">Choosing the Right Compression Method</a></li>
@@ -226,66 +234,73 @@ Model compression techniques aim to reduce the size and computational requiremen
 <h2 id="1-pruning-cutting-down-redundant-weights"><strong>1. Pruning: Cutting Down Redundant Weights</strong><a hidden class="anchor" aria-hidden="true" href="#1-pruning-cutting-down-redundant-weights">#</a></h2>
 <h3 id="what-is-pruning"><strong>What is Pruning?</strong><a hidden class="anchor" aria-hidden="true" href="#what-is-pruning">#</a></h3>
 <p>Pruning removes unnecessary weights or neurons from a neural network, reducing its size without significantly impacting performance. The idea is that many parameters contribute little to the final output, and eliminating them can speed up computation.</p>
-<h3 id="types-of-pruning"><strong>Types of Pruning:</strong><a hidden class="anchor" aria-hidden="true" href="#types-of-pruning">#</a></h3>
+<h3 id="types-of-pruning"><strong>Types of Pruning</strong><a hidden class="anchor" aria-hidden="true" href="#types-of-pruning">#</a></h3>
 <ul>
 <li><strong>Unstructured Pruning:</strong> Removes individual weights that have minimal impact on the network.</li>
 <li><strong>Structured Pruning:</strong> Removes entire neurons, channels, or layers for a more hardware-friendly compression.</li>
 <li><strong>Global vs. Layer-wise Pruning:</strong> Some methods prune across the entire model, while others prune within each layer independently.</li>
 </ul>
-<h3 id="use-cases-and-benefits"><strong>Use Cases and Benefits:</strong><a hidden class="anchor" aria-hidden="true" href="#use-cases-and-benefits">#</a></h3>
+<h3 id="use-cases-and-benefits"><strong>Use Cases and Benefits</strong><a hidden class="anchor" aria-hidden="true" href="#use-cases-and-benefits">#</a></h3>
 <ul>
 <li>Works well for over-parameterized models.</li>
 <li>Can be applied iteratively during training or post-training.</li>
 <li>Reduces memory usage and speeds up inference.</li>
 </ul>
-<hr>
+<h3 id="further-reading"><strong>Further Reading</strong><a hidden class="anchor" aria-hidden="true" href="#further-reading">#</a></h3>
+<p>For a detailed walkthrough on pruning, check out <a href="https://arikpoz.github.io/posts/2025-04-10-neural-network-pruning-how-to-accelerate-inference-with-minimal-accuracy-loss/">this post</a> where we achieve a 90% reduction in model size and 5.5x faster inference time while maintaining accuracy.</p>
 <h2 id="2-quantization-reducing-precision-for-faster-computation"><strong>2. Quantization: Reducing Precision for Faster Computation</strong><a hidden class="anchor" aria-hidden="true" href="#2-quantization-reducing-precision-for-faster-computation">#</a></h2>
 <h3 id="what-is-quantization"><strong>What is Quantization?</strong><a hidden class="anchor" aria-hidden="true" href="#what-is-quantization">#</a></h3>
 <p>Quantization lowers the precision of a model’s weights and activations, reducing memory usage and enabling faster execution, particularly on specialized hardware like GPUs, TPUs, and mobile processors.</p>
-<h3 id="types-of-quantization"><strong>Types of Quantization:</strong><a hidden class="anchor" aria-hidden="true" href="#types-of-quantization">#</a></h3>
+<h3 id="types-of-quantization"><strong>Types of Quantization</strong><a hidden class="anchor" aria-hidden="true" href="#types-of-quantization">#</a></h3>
 <ul>
 <li><strong>Post-Training Quantization:</strong> Converts a trained FP32 model to a lower precision (e.g., INT8) after training.</li>
 <li><strong>Quantization-Aware Training:</strong> Trains the model with quantization effects simulated to minimize accuracy loss.</li>
 <li><strong>Dynamic vs. Static Quantization:</strong> Determines whether quantization is applied per batch dynamically or precomputed for inference.</li>
 </ul>
-<h3 id="use-cases-and-benefits-1"><strong>Use Cases and Benefits:</strong><a hidden class="anchor" aria-hidden="true" href="#use-cases-and-benefits-1">#</a></h3>
+<h3 id="use-cases-and-benefits-1"><strong>Use Cases and Benefits</strong><a hidden class="anchor" aria-hidden="true" href="#use-cases-and-benefits-1">#</a></h3>
 <ul>
 <li>Significant speedup on hardware optimized for lower precision (TensorRT, OpenVINO, TFLite).</li>
 <li>Works well for inference-time optimization.</li>
 <li>Reduces model size while maintaining accuracy in many cases.</li>
 </ul>
+<h3 id="further-reading-1"><strong>Further Reading</strong><a hidden class="anchor" aria-hidden="true" href="#further-reading-1">#</a></h3>
+<p>For a detailed walkthrough on quantization, check out <a href="https://arikpoz.github.io/posts/2025-04-16-neural-network-quantization-in-pytorch/">this post</a> where we explore quantization in PyTorch, applying both post-training quantization (PTQ) and quantization-aware training (QAT) on CIFAR-10 with ResNet18. In the example, we achieve a 75% reduction in space and a 16% reduction in GPU latency with only a 1% drop in accuracy.</p>
 <hr>
 <h2 id="3-knowledge-distillation-training-small-models-using-large-models"><strong>3. Knowledge Distillation: Training Small Models Using Large Models</strong><a hidden class="anchor" aria-hidden="true" href="#3-knowledge-distillation-training-small-models-using-large-models">#</a></h2>
 <h3 id="what-is-knowledge-distillation"><strong>What is Knowledge Distillation?</strong><a hidden class="anchor" aria-hidden="true" href="#what-is-knowledge-distillation">#</a></h3>
 <p>Knowledge distillation trains a smaller “student” model to mimic the behavior of a larger “teacher” model. Instead of learning directly from labeled data, the student learns from the teacher’s output distribution, capturing nuanced knowledge that direct training may miss.</p>
-<h3 id="types-of-knowledge-distillation"><strong>Types of Knowledge Distillation:</strong><a hidden class="anchor" aria-hidden="true" href="#types-of-knowledge-distillation">#</a></h3>
+<h3 id="types-of-knowledge-distillation"><strong>Types of Knowledge Distillation</strong><a hidden class="anchor" aria-hidden="true" href="#types-of-knowledge-distillation">#</a></h3>
 <ul>
 <li><strong>Logit-based Distillation:</strong> The student learns from the softened output probabilities of the teacher.</li>
 <li><strong>Feature-based Distillation:</strong> The student mimics intermediate feature representations from the teacher.</li>
 <li><strong>Self-Distillation:</strong> A single model is trained in stages, where later iterations learn from earlier iterations.</li>
 </ul>
-<h3 id="use-cases-and-benefits-2"><strong>Use Cases and Benefits:</strong><a hidden class="anchor" aria-hidden="true" href="#use-cases-and-benefits-2">#</a></h3>
+<h3 id="use-cases-and-benefits-2"><strong>Use Cases and Benefits</strong><a hidden class="anchor" aria-hidden="true" href="#use-cases-and-benefits-2">#</a></h3>
 <ul>
 <li>Enables smaller models to achieve near teacher-level accuracy.</li>
 <li>Useful for transferring knowledge from large pretrained models (e.g., BERT → DistilBERT).</li>
 <li>Can be used in conjunction with other compression techniques.</li>
 </ul>
+<h3 id="further-reading-2"><strong>Further Reading</strong><a hidden class="anchor" aria-hidden="true" href="#further-reading-2">#</a></h3>
+<p>For a detailed walkthrough on knowledge distillation, check out <a href="https://arikpoz.github.io/posts/2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way/">this post</a> where we demonstrate how to distill a powerful ResNet50 model into a lightweight ResNet18. Learn how to achieve a +5% boost in accuracy compared to training the smaller model from scratch, while cutting inference latency by over 50%. The post covers soft target alignment, intermediate feature matching, and practical implementation in PyTorch, making it ideal for deployment on resource-constrained devices.</p>
 <hr>
 <h2 id="4-low-rank-factorization-decomposing-weights-for-efficiency"><strong>4. Low-Rank Factorization: Decomposing Weights for Efficiency</strong><a hidden class="anchor" aria-hidden="true" href="#4-low-rank-factorization-decomposing-weights-for-efficiency">#</a></h2>
 <h3 id="what-is-low-rank-factorization"><strong>What is Low-Rank Factorization?</strong><a hidden class="anchor" aria-hidden="true" href="#what-is-low-rank-factorization">#</a></h3>
 <p>Low-rank factorization techniques decompose large weight matrices into smaller ones that approximate the original matrix, reducing computational cost without major accuracy loss.</p>
-<h3 id="methods-of-factorization"><strong>Methods of Factorization:</strong><a hidden class="anchor" aria-hidden="true" href="#methods-of-factorization">#</a></h3>
+<h3 id="methods-of-factorization"><strong>Methods of Factorization</strong><a hidden class="anchor" aria-hidden="true" href="#methods-of-factorization">#</a></h3>
 <ul>
 <li><strong>Singular Value Decomposition (SVD):</strong> Breaks down weight matrices into simpler components.</li>
 <li><strong>Tensor Decomposition:</strong> Extends matrix factorization to multi-dimensional tensors for convolutional layers.</li>
 <li><strong>Factorized Convolutions:</strong> Reduces convolutional kernel complexity (e.g., depthwise separable convolutions in MobileNet).</li>
 </ul>
-<h3 id="use-cases-and-benefits-3"><strong>Use Cases and Benefits:</strong><a hidden class="anchor" aria-hidden="true" href="#use-cases-and-benefits-3">#</a></h3>
+<h3 id="use-cases-and-benefits-3"><strong>Use Cases and Benefits</strong><a hidden class="anchor" aria-hidden="true" href="#use-cases-and-benefits-3">#</a></h3>
 <ul>
 <li>Particularly useful for CNNs and Transformer models.</li>
 <li>Reduces FLOPs (floating point operations) in matrix multiplications.</li>
 <li>Can be combined with pruning and quantization for additional gains.</li>
 </ul>
+<h3 id="further-reading-3"><strong>Further Reading</strong><a hidden class="anchor" aria-hidden="true" href="#further-reading-3">#</a></h3>
+<p>For a detailed walkthrough on low-rank factorization, check out <a href="https://arikpoz.github.io/posts/2025-04-29-low-rank-factorization-in-pytorch-compressing-neural-networks-with-linear-algebra/">this post</a> where we explain what low-rank factorization is, demonstrate its application to a ResNet50 model in PyTorch, and evaluate the trade-offs. In our example, we achieved a 93% reduction in model size (from 94.38 MB down to 6.9 MB), cut inference latency by 10%, and incurred only a 3.5% drop in accuracy, making it a compelling choice for many practical applications.</p>
 <hr>
 <h2 id="choosing-the-right-compression-method"><strong>Choosing the Right Compression Method</strong><a hidden class="anchor" aria-hidden="true" href="#choosing-the-right-compression-method">#</a></h2>
 <p>Each compression technique has trade-offs, and the best choice depends on your target hardware and application:</p>

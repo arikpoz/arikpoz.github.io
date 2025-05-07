@@ -182,30 +182,32 @@ In this post, we&rsquo;ll explore various techniques to accelerate neural networ
 <p>One of the most effective ways to speed up a neural network is by reducing its size while maintaining performance. This can be achieved through:</p>
 <ul>
 <li>
-<p><strong>Pruning</strong> – Removing unnecessary weights and neurons that contribute little to the model’s output. This reduces the number of computations needed during inference, improving speed without significantly affecting accuracy. Techniques include structured and unstructured pruning, where entire neurons or just individual weights are removed.</p>
+<p><strong><a href="https://arikpoz.github.io/posts/2025-04-10-neural-network-pruning-how-to-accelerate-inference-with-minimal-accuracy-loss/">Pruning</a></strong>. Removing unnecessary weights and neurons that contribute little to the model’s output. This reduces the number of computations needed during inference, improving speed without significantly affecting accuracy. Techniques include structured and unstructured pruning, where entire neurons or just individual weights are removed.</p>
 </li>
 <li>
-<p><strong>Quantization</strong> – Lowering the precision of weights and activations, typically from 32-bit floating point (FP32) to 16-bit (FP16) or even 8-bit integers (INT8). Since lower precision numbers require fewer bits to store and process, inference can be significantly accelerated, especially on hardware optimized for integer operations like NVIDIA TensorRT or TensorFlow Lite.</p>
+<p><strong><a href="https://arikpoz.github.io/posts/2025-04-16-neural-network-quantization-in-pytorch/">Quantization</a></strong>. Lowering the precision of weights and activations, typically from 32-bit floating point (FP32) to 16-bit (FP16) or even 8-bit integers (INT8). Since lower precision numbers require fewer bits to store and process, inference can be significantly accelerated, especially on hardware optimized for integer operations like NVIDIA TensorRT or TensorFlow Lite.</p>
 </li>
 <li>
-<p><strong>Knowledge Distillation</strong> – Training a smaller &ldquo;student&rdquo; model to mimic a larger &ldquo;teacher&rdquo; model. The student model learns to approximate the output of the more complex model, reducing computational overhead while maintaining accuracy. This is particularly useful for deploying models on edge devices or mobile applications.</p>
+<p><strong><a href="https://arikpoz.github.io/posts/2025-04-24-knowledge-distillation-in-pytorch-shrinking-neural-networks-the-smart-way/">Knowledge Distillation</a></strong>. Training a smaller &ldquo;student&rdquo; model to mimic a larger &ldquo;teacher&rdquo; model. The student model learns to approximate the output of the more complex model, reducing computational overhead while maintaining accuracy. This is particularly useful for deploying models on edge devices or mobile applications.</p>
 </li>
 <li>
-<p><strong>Low-Rank Factorization</strong> – Decomposing large weight matrices into smaller, more efficient representations. By breaking down convolutions and fully connected layers into simpler operations, low-rank factorization can reduce the number of multiplications required, speeding up inference while preserving most of the original model&rsquo;s expressiveness.</p>
+<p><strong><a href="https://arikpoz.github.io/posts/2025-04-29-low-rank-factorization-in-pytorch-compressing-neural-networks-with-linear-algebra/">Low-Rank Factorization</a></strong>. Decomposing large weight matrices into smaller, more efficient representations. By breaking down convolutions and fully connected layers into simpler operations, low-rank factorization can reduce the number of multiplications required, speeding up inference while preserving most of the original model&rsquo;s expressiveness.</p>
 </li>
 </ul>
+<blockquote>
+<p>For a deeper dive into model compression techniques, check out <a href="https://arikpoz.github.io/posts/2025-04-02-introduction-to-model-compression-why-and-how-to-shrink-neural-networks-for-speed/">this detailed guide</a>, where we explore the &ldquo;why&rdquo; and &ldquo;how&rdquo; of shrinking neural networks for faster performance.</p></blockquote>
 <hr>
 <h2 id="2-graph--operator-optimization-speeding-up-computation"><strong>2. Graph &amp; Operator Optimization: Speeding Up Computation</strong><a hidden class="anchor" aria-hidden="true" href="#2-graph--operator-optimization-speeding-up-computation">#</a></h2>
 <p>Many deep learning frameworks support graph optimizations that fuse or restructure operations for efficiency. These techniques make computations more efficient by reducing redundant operations:</p>
 <ul>
 <li>
-<p><strong>Graph Fusion</strong> – Merging multiple operations into a single, optimized kernel. For example, in deep learning frameworks like TensorFlow and PyTorch, a convolution followed by a batch normalization operation can be fused into a single computation step, reducing memory access overhead and speeding up execution.</p>
+<p><strong><a href="https://arikpoz.github.io/posts/2025-05-07-faster-models-with-graph-fusion-how-deep-learning-frameworks-optimize-your-computation/">Graph Fusion</a></strong>. Merging multiple operations into a single, optimized kernel. For example, in deep learning frameworks like TensorFlow and PyTorch, a convolution followed by a batch normalization operation can be fused into a single computation step, reducing memory access overhead and speeding up execution.</p>
 </li>
 <li>
-<p><strong>ONNX &amp; TorchScript Optimization</strong> – Converting models into an optimized intermediate representation like ONNX (Open Neural Network Exchange) or TorchScript can allow further graph-level optimizations and compatibility with efficient runtime engines like ONNX Runtime and TensorRT.</p>
+<p><strong>ONNX &amp; TorchScript Optimization</strong>. Converting models into an optimized intermediate representation like ONNX (Open Neural Network Exchange) or TorchScript can allow further graph-level optimizations and compatibility with efficient runtime engines like ONNX Runtime and TensorRT.</p>
 </li>
 <li>
-<p><strong>XLA (Accelerated Linear Algebra)</strong> – An optimization framework used in TensorFlow and JAX that compiles deep learning models into highly efficient computation graphs, enabling faster execution by reducing redundant operations and improving memory locality.</p>
+<p><strong>XLA (Accelerated Linear Algebra)</strong>. An optimization framework used in TensorFlow and JAX that compiles deep learning models into highly efficient computation graphs, enabling faster execution by reducing redundant operations and improving memory locality.</p>
 </li>
 </ul>
 <hr>
@@ -213,13 +215,13 @@ In this post, we&rsquo;ll explore various techniques to accelerate neural networ
 <p>Neural networks can be significantly accelerated by optimizing for specific hardware capabilities. This involves choosing the right computing resources and leveraging hardware-specific optimizations:</p>
 <ul>
 <li>
-<p><strong>Using Specialized Libraries</strong> – Libraries like NVIDIA&rsquo;s cuDNN, Intel’s MKL-DNN, and OneDNN optimize matrix multiplications and convolutions to run efficiently on specific hardware. These backends take advantage of SIMD (Single Instruction, Multiple Data) and GPU tensor cores to maximize throughput.</p>
+<p><strong>Using Specialized Libraries</strong>. Libraries like NVIDIA&rsquo;s cuDNN, Intel’s MKL-DNN, and OneDNN optimize matrix multiplications and convolutions to run efficiently on specific hardware. These backends take advantage of SIMD (Single Instruction, Multiple Data) and GPU tensor cores to maximize throughput.</p>
 </li>
 <li>
-<p><strong>Choosing the Right Hardware</strong> – Depending on your workload, selecting the right processing unit can make a huge difference. GPUs excel at parallelized matrix computations, TPUs (Tensor Processing Units) are optimized for deep learning workloads, and CPUs can still be efficient for low-latency applications, especially with vectorized instructions.</p>
+<p><strong>Choosing the Right Hardware</strong>. Depending on your workload, selecting the right processing unit can make a huge difference. GPUs excel at parallelized matrix computations, TPUs (Tensor Processing Units) are optimized for deep learning workloads, and CPUs can still be efficient for low-latency applications, especially with vectorized instructions.</p>
 </li>
 <li>
-<p><strong>Parallelization</strong> – Splitting computations across multiple processing units to improve efficiency. Data parallelism (splitting batches across devices), model parallelism (splitting layers across devices), and tensor parallelism (splitting tensors across devices) are all used in large-scale training and inference.</p>
+<p><strong>Parallelization</strong>. Splitting computations across multiple processing units to improve efficiency. Data parallelism (splitting batches across devices), model parallelism (splitting layers across devices), and tensor parallelism (splitting tensors across devices) are all used in large-scale training and inference.</p>
 </li>
 </ul>
 <hr>
@@ -227,16 +229,16 @@ In this post, we&rsquo;ll explore various techniques to accelerate neural networ
 <p>Deep learning frameworks are often designed for flexibility, which can lead to inefficiencies during inference. Using optimized inference engines helps streamline execution:</p>
 <ul>
 <li>
-<p><strong>TensorRT</strong> – NVIDIA’s high-performance deep learning inference engine that applies layer fusion, precision calibration, and kernel tuning to maximize speed on GPUs. It’s widely used in production AI deployments, from self-driving cars to cloud AI.</p>
+<p><strong>TensorRT</strong>. NVIDIA’s high-performance deep learning inference engine that applies layer fusion, precision calibration, and kernel tuning to maximize speed on GPUs. It’s widely used in production AI deployments, from self-driving cars to cloud AI.</p>
 </li>
 <li>
-<p><strong>OpenVINO</strong> – Intel’s optimization framework designed for CPUs and specialized accelerators. It converts models into an intermediate representation optimized for low-latency inference, making it a good choice for deploying models on Intel hardware, including edge devices.</p>
+<p><strong>OpenVINO</strong>. Intel’s optimization framework designed for CPUs and specialized accelerators. It converts models into an intermediate representation optimized for low-latency inference, making it a good choice for deploying models on Intel hardware, including edge devices.</p>
 </li>
 <li>
-<p><strong>TVM</strong> – An open-source deep learning compiler that enables automatic optimization of deep learning models across different hardware backends. It applies transformations like operator fusion and memory reuse to accelerate inference without modifying the original model.</p>
+<p><strong>TVM</strong>. An open-source deep learning compiler that enables automatic optimization of deep learning models across different hardware backends. It applies transformations like operator fusion and memory reuse to accelerate inference without modifying the original model.</p>
 </li>
 <li>
-<p><strong>TFLite &amp; ONNX Runtime</strong> – TensorFlow Lite is optimized for mobile and embedded devices, while ONNX Runtime provides accelerated inference for models converted to the ONNX format. These are crucial for deploying models on lightweight environments with constrained resources.</p>
+<p><strong>TFLite &amp; ONNX Runtime</strong>. TensorFlow Lite is optimized for mobile and embedded devices, while ONNX Runtime provides accelerated inference for models converted to the ONNX format. These are crucial for deploying models on lightweight environments with constrained resources.</p>
 </li>
 </ul>
 <hr>
@@ -244,13 +246,13 @@ In this post, we&rsquo;ll explore various techniques to accelerate neural networ
 <p>Beyond optimizing the model itself, efficiently managing input data and execution pipelines is essential for real-time applications:</p>
 <ul>
 <li>
-<p><strong>Dynamic vs. Static Batching</strong> – Static batching processes fixed-size input batches, which is faster but less flexible. Dynamic batching, on the other hand, groups incoming requests into batches in real-time, optimizing performance in production settings.</p>
+<p><strong>Dynamic vs. Static Batching</strong>. Static batching processes fixed-size input batches, which is faster but less flexible. Dynamic batching, on the other hand, groups incoming requests into batches in real-time, optimizing performance in production settings.</p>
 </li>
 <li>
-<p><strong>Preloading &amp; Caching</strong> – Data loading can become a bottleneck in high-performance systems. Using data caching and preloading techniques (e.g., TensorFlow&rsquo;s <code>tf.data</code> API or PyTorch’s <code>DataLoader</code>) ensures that the model is never waiting for input data.</p>
+<p><strong>Preloading &amp; Caching</strong>. Data loading can become a bottleneck in high-performance systems. Using data caching and preloading techniques (e.g., TensorFlow&rsquo;s <code>tf.data</code> API or PyTorch’s <code>DataLoader</code>) ensures that the model is never waiting for input data.</p>
 </li>
 <li>
-<p><strong>Multi-threaded Execution</strong> – Running inference using multiple CPU or GPU threads allows models to process multiple requests in parallel, improving throughput. Frameworks like TensorFlow Serving and TorchServe optimize request handling using these techniques.</p>
+<p><strong>Multi-threaded Execution</strong>. Running inference using multiple CPU or GPU threads allows models to process multiple requests in parallel, improving throughput. Frameworks like TensorFlow Serving and TorchServe optimize request handling using these techniques.</p>
 </li>
 </ul>
 <hr>
