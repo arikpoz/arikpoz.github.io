@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Graph-Fusion on Practical ML</title>
+    <link>https://arikpoz.github.io/tags/graph-fusion/</link>
+    <description>Recent content in Graph-Fusion on Practical ML</description>
+    <image>
+      <title>Practical ML</title>
+      <url>https://arikpoz.github.io/images/papermod-cover.png</url>
+      <link>https://arikpoz.github.io/images/papermod-cover.png</link>
+    </image>
+    <generator>Hugo -- 0.147.2</generator>
+    <language>en</language>
+    <lastBuildDate>Wed, 07 May 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://arikpoz.github.io/tags/graph-fusion/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Faster Models with Graph Fusion: How Deep Learning Frameworks Optimize Your Computation</title>
+      <link>https://arikpoz.github.io/posts/2025-05-07-faster-models-with-graph-fusion-how-deep-learning-frameworks-optimize-your-computation/</link>
+      <pubDate>Wed, 07 May 2025 00:00:00 +0000</pubDate>
+      <guid>https://arikpoz.github.io/posts/2025-05-07-faster-models-with-graph-fusion-how-deep-learning-frameworks-optimize-your-computation/</guid>
+      <description>&lt;p&gt;&lt;img alt=&#34;&amp;ldquo;An illustration of graph fusion.&amp;rdquo;&#34; loading=&#34;lazy&#34; src=&#34;https://arikpoz.github.io/posts/2025-05-07-faster-models-with-graph-fusion-how-deep-learning-frameworks-optimize-your-computation/lead-image.jpg&#34;&gt;&lt;/p&gt;
+&lt;h2 id=&#34;introduction&#34;&gt;Introduction&lt;/h2&gt;
+&lt;p&gt;Modern deep learning models are made up of hundreds or even thousands of operations. Each of these operations involves memory reads, computation, and memory writes, which when executed individually leads to substantial overhead. One of the most effective ways to cut down this overhead and boost performance is through &lt;strong&gt;graph fusion&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Graph fusion&lt;/strong&gt;, also known as operation fusion or kernel fusion, refers to the process of merging multiple operations into a single, more efficient kernel. By combining adjacent operations like a convolution followed by batch normalization and a ReLU activation into one fused unit, deep learning frameworks can avoid unnecessary memory access, reduce kernel launch overhead, and take better advantage of hardware capabilities.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

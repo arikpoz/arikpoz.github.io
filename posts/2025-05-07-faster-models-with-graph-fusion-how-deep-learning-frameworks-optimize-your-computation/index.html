@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Faster Models with Graph Fusion: How Deep Learning Frameworks Optimize Your Computation | Practical ML</title>
+<meta name="keywords" content="machine-learning, optimization, deep-learning, graph-fusion">
+<meta name="description" content="
+Introduction
+Modern deep learning models are made up of hundreds or even thousands of operations. Each of these operations involves memory reads, computation, and memory writes, which when executed individually leads to substantial overhead. One of the most effective ways to cut down this overhead and boost performance is through graph fusion.
+Graph fusion, also known as operation fusion or kernel fusion, refers to the process of merging multiple operations into a single, more efficient kernel. By combining adjacent operations like a convolution followed by batch normalization and a ReLU activation into one fused unit, deep learning frameworks can avoid unnecessary memory access, reduce kernel launch overhead, and take better advantage of hardware capabilities.">
+<meta name="author" content="Arik Poznanski">
+<link rel="canonical" href="https://arikpoz.github.io/posts/2025-05-07-faster-models-with-graph-fusion-how-deep-learning-frameworks-optimize-your-computation/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.f49d66caae9ea0fd43f21f29e71a8d3e284517ed770f2aa86fa012953ad3c9ef.css" integrity="sha256-9J1myq6eoP1D8h8p5xqNPihFF&#43;13Dyqob6ASlTrTye8=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://arikpoz.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://arikpoz.github.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://arikpoz.github.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://arikpoz.github.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://arikpoz.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://arikpoz.github.io/posts/2025-05-07-faster-models-with-graph-fusion-how-deep-learning-frameworks-optimize-your-computation/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript>
+<meta name="google-site-verification" content="W9Zr2fU6GN7Pj5eoP80QHjzCMltqYsT_ut_zg5S8FP8" />
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true},{left: '$', right: '$', display: false}]});">
+</script>
+
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-KDV9XDG1TJ"></script>
+      <script>
+        var doNotTrack = false;
+        if ( false ) {
+          var dnt = (navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack);
+          var doNotTrack = (dnt == "1" || dnt == "yes");
+        }
+        if (!doNotTrack) {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-KDV9XDG1TJ');
+        }
+      </script>
+
+
+
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://arikpoz.github.io/" accesskey="h" title="Practical ML (Alt + H)">Practical ML</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://arikpoz.github.io/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <div class="breadcrumbs"><a href="https://arikpoz.github.io/">Home</a>&nbsp;»&nbsp;<a href="https://arikpoz.github.io/posts/">Posts</a></div>
+    <h1 class="post-title entry-hint-parent">
+      Faster Models with Graph Fusion: How Deep Learning Frameworks Optimize Your Computation
+    </h1>
+    <div class="post-meta"><span title='2025-05-07 00:00:00 +0000 UTC'>May 7, 2025</span>&nbsp;·&nbsp;12 min&nbsp;·&nbsp;Arik Poznanski
+
+</div>
+  </header> <div class="toc">
+    <details >
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><ul>
+                <li>
+                    <a href="#introduction" aria-label="Introduction">Introduction</a></li>
+                <li>
+                    <a href="#what-is-graph-fusion" aria-label="What is Graph Fusion?">What is Graph Fusion?</a></li>
+                <li>
+                    <a href="#motivation-for-fusion" aria-label="Motivation for Fusion">Motivation for Fusion</a></li>
+                <li>
+                    <a href="#common-fusion-patterns" aria-label="Common Fusion Patterns">Common Fusion Patterns</a><ul>
+                        
+                <li>
+                    <a href="#conv--batchnorm--relu" aria-label="Conv &#43; BatchNorm (&#43; ReLU)">Conv + BatchNorm (+ ReLU)</a></li>
+                <li>
+                    <a href="#matmul--bias--activation" aria-label="MatMul &#43; Bias &#43; Activation">MatMul + Bias + Activation</a></li>
+                <li>
+                    <a href="#chained-pointwise-ops" aria-label="Chained Pointwise Ops">Chained Pointwise Ops</a></li>
+                <li>
+                    <a href="#residual-blocks-add--activation" aria-label="Residual Blocks (Add &#43; Activation)">Residual Blocks (Add + Activation)</a></li>
+                <li>
+                    <a href="#normalization--activation" aria-label="Normalization &#43; Activation">Normalization + Activation</a></li></ul>
+                </li>
+                <li>
+                    <a href="#fusion-in-practice-framework-specific-techniques" aria-label="Fusion in Practice: Framework-Specific Techniques">Fusion in Practice: Framework-Specific Techniques</a><ul>
+                        
+                <li>
+                    <a href="#pytorch" aria-label="PyTorch">PyTorch</a></li>
+                <li>
+                    <a href="#tensorflow" aria-label="TensorFlow">TensorFlow</a></li>
+                <li>
+                    <a href="#onnx-runtime" aria-label="ONNX Runtime">ONNX Runtime</a></li></ul>
+                </li>
+                <li>
+                    <a href="#example-fusing-conv--batchnorm-in-pytorch" aria-label="Example: Fusing Conv &#43; BatchNorm in PyTorch">Example: Fusing Conv + BatchNorm in PyTorch</a></li>
+                <li>
+                    <a href="#when-graph-fusion-helps-and-when-it-doesnt" aria-label="When Graph Fusion Helps (and When It Doesn’t)">When Graph Fusion Helps (and When It Doesn’t)</a><ul>
+                        
+                <li>
+                    <a href="#when-graph-fusion-helps" aria-label="When Graph Fusion Helps">When Graph Fusion Helps</a></li>
+                <li>
+                    <a href="#when-fusion-doesnt-help-much" aria-label="When Fusion Doesn’t Help (Much)">When Fusion Doesn’t Help (Much)</a></li></ul>
+                </li>
+                <li>
+                    <a href="#conclusion" aria-label="Conclusion">Conclusion</a>
+                </li>
+            </ul>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><p><img alt="&ldquo;An illustration of graph fusion.&rdquo;" loading="lazy" src="/posts/2025-05-07-faster-models-with-graph-fusion-how-deep-learning-frameworks-optimize-your-computation/lead-image.jpg"></p>
+<h2 id="introduction">Introduction<a hidden class="anchor" aria-hidden="true" href="#introduction">#</a></h2>
+<p>Modern deep learning models are made up of hundreds or even thousands of operations. Each of these operations involves memory reads, computation, and memory writes, which when executed individually leads to substantial overhead. One of the most effective ways to cut down this overhead and boost performance is through <strong>graph fusion</strong>.</p>
+<p><strong>Graph fusion</strong>, also known as operation fusion or kernel fusion, refers to the process of merging multiple operations into a single, more efficient kernel. By combining adjacent operations like a convolution followed by batch normalization and a ReLU activation into one fused unit, deep learning frameworks can avoid unnecessary memory access, reduce kernel launch overhead, and take better advantage of hardware capabilities.</p>
+<p>This optimization is applied under the hood by compilers and runtime engines like PyTorch’s TorchScript or ONNX Runtime’s graph transformers. For the end user, the result is faster model execution, with no changes needed to the model’s architecture.</p>
+<p>In this post, we’ll explore how graph fusion works, what types of operations can be fused, and how different frameworks apply it. We’ll also walk through a concrete PyTorch example and examine when fusion offers the biggest benefits, and when it doesn’t.</p>
+<hr>
+<h2 id="what-is-graph-fusion">What is Graph Fusion?<a hidden class="anchor" aria-hidden="true" href="#what-is-graph-fusion">#</a></h2>
+<p>At its core, <strong>graph fusion</strong> is a compiler optimization technique that merges multiple adjacent operations in a computational graph into a single, more efficient operation. Instead of executing each operation independently, each with its own memory reads, computation, and memory writes, fusion allows these steps to be combined into one pass, reducing overhead and improving performance.</p>
+<p>Think of it like combining multiple assembly lines into a single, streamlined process. For instance, a common sequence in neural networks, <strong>convolution → batch normalization → ReLU activation</strong>, can be fused into one operation that does all three steps at once. This avoids writing intermediate results to memory, launching multiple GPU kernels, or repeatedly switching contexts.</p>
+<p>Graph fusion can occur at various levels of abstraction:</p>
+<ul>
+<li><strong>High-level graph fusion</strong>, where entire layers or ops are merged during graph transformations (e.g., fusing a Conv + BatchNorm during model export or optimization).</li>
+<li><strong>Low-level kernel fusion</strong>, where the fused operations are implemented as a single CUDA kernel.</li>
+<li><strong>Dynamic fusion</strong>, where operations are fused at runtime based on input shapes and execution context.</li>
+</ul>
+<p>The benefits of graph fusion are particularly important in deep learning workloads, where models are large, and even small inefficiencies can add up. Frameworks like PyTorch, TensorFlow, and ONNX Runtime all include backend compilers and execution engines that perform graph fusion under the hood to improve both training and inference performance.</p>
+<hr>
+<h2 id="motivation-for-fusion">Motivation for Fusion<a hidden class="anchor" aria-hidden="true" href="#motivation-for-fusion">#</a></h2>
+<p>To understand why graph fusion matters, we need to look at the inefficiencies in how deep learning models are typically executed.</p>
+<p>Most neural networks are expressed as computational graphs where each node (operation) is executed independently: a convolution runs, writes its output to memory; batch normalization reads that output, processes it, and writes its own output; then ReLU does the same, and so on. Each step involves a <strong>memory read</strong>, <strong>computation</strong>, and <strong>memory write</strong>, plus a kernel launch on the GPU or CPU.</p>
+<p>This process leads to several key performance bottlenecks:</p>
+<p><strong>1. Memory Bandwidth Bottlenecks</strong></p>
+<p>Modern accelerators like GPUs are extremely fast at computation, but they’re often limited by memory bandwidth. Writing intermediate results to memory and reading them back in the next op can consume more time than the computation itself. Fusing operations keeps intermediate values in registers or shared memory, drastically reducing memory traffic.</p>
+<p><strong>2. Kernel Launch Overhead</strong></p>
+<p>Each operation, especially on GPUs, requires launching a separate kernel. These launches aren’t free, they involve CPU-side scheduling, driver overhead, and context switches. By combining multiple operations into a single kernel, fusion minimizes launch overhead and improves throughput.</p>
+<p><strong>3. Better Cache and Register Utilization</strong></p>
+<p>Fusion keeps data closer to the compute units. Instead of flushing intermediate results to global memory (where latency is high), fused kernels can use registers or local memory, resulting in better locality and faster execution.</p>
+<p><strong>4. Reduced Latency and Improved Throughput</strong></p>
+<p>Ultimately, graph fusion speeds up inference and training. It’s especially important in latency-sensitive applications (e.g., real-time inference on edge devices), but also valuable at scale for reducing compute costs in the cloud.</p>
+<hr>
+<h2 id="common-fusion-patterns">Common Fusion Patterns<a hidden class="anchor" aria-hidden="true" href="#common-fusion-patterns">#</a></h2>
+<p>While in theory many operations can be fused, in practice, fusion works best when operations are <strong>adjacent</strong>, <strong>stateless</strong>, and <strong>element-wise</strong> or <strong>mathematically composable</strong>. Most frameworks and compilers include pattern-matching passes that look for common subgraphs that can be merged. Here are some of the most frequently fused patterns in modern deep learning:</p>
+<h3 id="conv--batchnorm--relu">Conv + BatchNorm (+ ReLU)<a hidden class="anchor" aria-hidden="true" href="#conv--batchnorm--relu">#</a></h3>
+<p>One of the most impactful fusion patterns. BatchNorm can be mathematically folded into Conv’s weights and bias, and ReLU can be appended as an activation. This reduces multiple operations into a single fused convolution kernel.</p>
+<p>Let’s break this down and see how it can be fused into a single, optimized operation.</p>
+<p><strong>1. The Convolution Layer</strong></p>
+<p>A standard 2D convolution outputs:</p>
+<p>$$
+z = W * x + b
+$$</p>
+<ul>
+<li>
+<p>$W$: convolution weights</p>
+</li>
+<li>
+<p>$b$: bias</p>
+</li>
+<li>
+<p>$*$: convolution operation</p>
+</li>
+<li>
+<p>$x$: input tensor</p>
+</li>
+<li>
+<p>$z$: output feature map</p>
+</li>
+</ul>
+<p><strong>2. The Batch Normalization Layer</strong></p>
+<p>BatchNorm, applied per channel, normalizes the output of the conv layer:</p>
+<p>$$
+\text{BN}(z) = \gamma \cdot \frac{z - \mu}{\sqrt{\sigma^2 + \epsilon}} + \beta
+$$</p>
+<ul>
+<li>
+<p>$\mu$, $\sigma^2$: running mean and variance (from training or inference stats)</p>
+</li>
+<li>
+<p>$\gamma$, $\beta$: learned affine parameters</p>
+</li>
+<li>
+<p>$\epsilon$: small constant for numerical stability</p>
+</li>
+</ul>
+<p><strong>3. Combine Conv and BatchNorm</strong></p>
+<p>We substitute $z = W * x + b$ into the BN expression:
+$$
+\text{BN}(W * x + b) = \gamma \cdot \frac{W * x + b - \mu}{\sqrt{\sigma^2 + \epsilon}} + \beta
+$$</p>
+<p>Let’s define:
+$$
+\alpha = \frac{\gamma}{\sqrt{\sigma^2 + \epsilon}}, \quad \beta&rsquo; = \beta - \alpha \cdot \mu
+$$</p>
+<p>Then:
+$$
+\text{BN}(W * x + b) = \alpha \cdot (W * x + b) + \beta - \alpha \cdot \mu = \alpha \cdot W * x + (\alpha \cdot b + \beta&rsquo;)
+$$</p>
+<p>So we can precompute:
+$$
+W&rsquo; = \alpha \cdot W, \quad b&rsquo; = \alpha \cdot b + \beta'
+$$</p>
+<p>Resulting in a single convolution with adjusted weights and biases:
+$$
+y = W&rsquo; * x + b'
+$$</p>
+<p><strong>4. Add ReLU</strong></p>
+<p>ReLU is a pointwise operation:
+$$
+y = \text{ReLU}(W&rsquo; * x + b&rsquo;)
+$$</p>
+<p>Because ReLU has no trainable parameters and is stateless, it can be appended directly to the fused operation, resulting in a fused Conv-BN-ReLU kernel.</p>
+<p><strong>5. Summary</strong></p>
+<p>By folding the BatchNorm parameters into the Conv weights and biases, and applying ReLU in-place, we eliminate:</p>
+<ul>
+<li>
+<p>The need to store the intermediate result after Conv.</p>
+</li>
+<li>
+<p>One or two extra kernel launches.</p>
+</li>
+<li>
+<p>Redundant memory bandwidth usage.</p>
+</li>
+</ul>
+<p>This fusion is both <strong>exact</strong> (no approximation) and <strong>cheap to compute</strong>, and is widely applied in inference for CNNs like ResNet, MobileNet, and EfficientNet.</p>
+<h3 id="matmul--bias--activation">MatMul + Bias + Activation<a hidden class="anchor" aria-hidden="true" href="#matmul--bias--activation">#</a></h3>
+<p>Fully connected layers often follow a matrix multiplication with a bias addition and an activation function like ReLU or GELU. These can be fused into a single GEMM (General Matrix Multiply) kernel.</p>
+<p>Example pattern:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">MatMul → Add (bias) → ReLU
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">       ↓
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">FusedLinearReLU
+</span></span></code></pre></div><h3 id="chained-pointwise-ops">Chained Pointwise Ops<a hidden class="anchor" aria-hidden="true" href="#chained-pointwise-ops">#</a></h3>
+<p>Operations like Add, Multiply, Sigmoid, Tanh, ReLU, etc., that operate element-wise on tensors can often be fused together into one kernel. This is especially helpful in transformers and MLP blocks where many such operations are chained.</p>
+<p>Example pattern:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Add → Multiply → ReLU → Dropout
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">          ↓
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">FusedPointwiseKernel
+</span></span></code></pre></div><h3 id="residual-blocks-add--activation">Residual Blocks (Add + Activation)<a hidden class="anchor" aria-hidden="true" href="#residual-blocks-add--activation">#</a></h3>
+<p>In ResNet-style architectures, skip connections end with an element-wise Add followed by an activation. These two steps are often fused in inference for lower latency.</p>
+<p>Example pattern:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Add → ReLU
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">      ↓
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">FusedAddReLU
+</span></span></code></pre></div><h3 id="normalization--activation">Normalization + Activation<a hidden class="anchor" aria-hidden="true" href="#normalization--activation">#</a></h3>
+<p>In transformer models, layer normalization followed by an activation like GELU is a candidate for fusion, especially in inference with fixed sequence lengths.</p>
+<hr>
+<h2 id="fusion-in-practice-framework-specific-techniques">Fusion in Practice: Framework-Specific Techniques<a hidden class="anchor" aria-hidden="true" href="#fusion-in-practice-framework-specific-techniques">#</a></h2>
+<p>While the concept of graph fusion is universal, its implementation varies across deep learning frameworks. Each framework has its own compiler stack, optimization passes, and APIs to expose or trigger fusion. Here&rsquo;s how fusion is handled in the most widely used ecosystems:</p>
+<h3 id="pytorch">PyTorch<a hidden class="anchor" aria-hidden="true" href="#pytorch">#</a></h3>
+<p>PyTorch supports several forms of fusion, mostly applied at the graph level using TorchScript or FX:</p>
+<ul>
+<li>
+<p><code>torch.jit.trace</code> / <code>torch.jit.script</code>: These convert Python-based models into a static computation graph. During tracing or scripting, PyTorch can detect common patterns and apply operator fusion automatically.</p>
+</li>
+<li>
+<p><code>fuse_modules()</code>: Common in quantization pipelines, this utility can explicitly fuse submodules like <code>Conv2d + BatchNorm2d + ReLU</code>. It&rsquo;s used during model preparation for quantized or optimized inference.</p>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">torch</span><span class="o">.</span><span class="n">quantization</span><span class="o">.</span><span class="n">fuse_modules</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">[[</span><span class="s2">&#34;conv&#34;</span><span class="p">,</span> <span class="s2">&#34;bn&#34;</span><span class="p">,</span> <span class="s2">&#34;relu&#34;</span><span class="p">]],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></span></code></pre></div><ul>
+<li>
+<p><strong>FX + TorchInductor</strong>: PyTorch 2.0 introduces a new compiler stack where models are transformed with FX (Functional Transformations) and lowered to optimized kernels using TorchInductor. This system performs aggressive fusion of pointwise ops, matrix multiplies, and even fuses with custom backends like Triton.</p>
+</li>
+<li>
+<p><strong>AOTAutograd + Triton</strong>: For training workloads, the AOTAutograd backend allows splitting the forward and backward graphs and fusing them across boundaries. Combined with Triton, it enables high-performance fused kernels.</p>
+</li>
+</ul>
+<h3 id="tensorflow">TensorFlow<a hidden class="anchor" aria-hidden="true" href="#tensorflow">#</a></h3>
+<p>Fusion in TensorFlow is primarily handled by its optimization and compilation tools:</p>
+<ul>
+<li>
+<p><strong>Grappler</strong>: TensorFlow&rsquo;s default graph optimizer. It includes fusion passes for folding BatchNorm into Conv, combining pointwise ops, and eliminating redundant ops.</p>
+</li>
+<li>
+<p><strong>XLA (Accelerated Linear Algebra)</strong>: A just-in-time compiler for TensorFlow graphs. When enabled (<code>@tf.function(jit_compile=True)</code>), it lowers TensorFlow ops into a highly optimized fused kernel representation using HLO (High-Level Optimizer) IR.</p>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="nd">@tf.function</span><span class="p">(</span><span class="n">jit_compile</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">fused_fn</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">batch_normalization</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">...</span><span class="p">)))</span>
+</span></span></code></pre></div><ul>
+<li><strong>TF Lite &amp; Edge TPU</strong>: TensorFlow Lite applies fusion passes when converting models for inference. It can fuse Conv+BN+Activation and quantize them into fused integer ops for efficient edge inference.</li>
+</ul>
+<h3 id="onnx-runtime">ONNX Runtime<a hidden class="anchor" aria-hidden="true" href="#onnx-runtime">#</a></h3>
+<p>ONNX Runtime performs fusion both during export and at runtime:</p>
+<ul>
+<li>
+<p><strong>Graph Transformers</strong>: Optimization passes like <code>ConvBNFusion</code>, <code>GemmActivationFusion</code>, and <code>LayerNormFusion</code> are run automatically when loading the graph, or via manual optimization scripts.</p>
+</li>
+<li>
+<p><strong>Execution Providers (EPs)</strong>: Fusion is often backend-dependent. For instance, the TensorRT EP or OpenVINO EP will apply hardware-specific fusion passes to accelerate execution.</p>
+</li>
+<li>
+<p><strong>Pretrained Model Optimizer Tools</strong>: ONNX Runtime provides CLI and Python tools (<code>optimizer.optimize_model</code>) that allow you to export a fused version of your model for deployment.</p>
+</li>
+</ul>
+<hr>
+<h2 id="example-fusing-conv--batchnorm-in-pytorch">Example: Fusing Conv + BatchNorm in PyTorch<a hidden class="anchor" aria-hidden="true" href="#example-fusing-conv--batchnorm-in-pytorch">#</a></h2>
+<p>To see graph fusion in action, let’s walk through a practical example of fusing a convolution and batch normalization layer in PyTorch. This pattern appears frequently in convolutional neural networks like ResNet and MobileNet, and fusing it can improve inference efficiency with no loss in accuracy.</p>
+<p><strong>Step 1: Define an Unfused Model</strong></p>
+<p>We’ll define a simple model with a convolution followed by batch normalization and ReLU:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">UnfusedConvBNReLU</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">bn</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">relu</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+</span></span></code></pre></div><p><strong>Step 2: Fuse the Layers</strong></p>
+<p>PyTorch provides a convenient method to fuse layers, especially useful when preparing a model for quantization or inference optimization:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">model</span> <span class="o">=</span> <span class="n">UnfusedConvBNReLU</span><span class="p">()</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">fused</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">quantization</span><span class="o">.</span><span class="n">fuse_modules</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">[[</span><span class="s2">&#34;conv&#34;</span><span class="p">,</span> <span class="s2">&#34;bn&#34;</span><span class="p">,</span> <span class="s2">&#34;relu&#34;</span><span class="p">]],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span></span></code></pre></div><p><strong>Step 3: Verify Correctness</strong></p>
+<p>You can check that the fused model behaves identically (within floating point tolerance):</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">input_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="n">output1</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">output2</span> <span class="o">=</span> <span class="n">fused</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">output1</span><span class="p">,</span> <span class="n">output2</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">))</span>  <span class="c1"># Should print: True</span>
+</span></span></code></pre></div><p><strong>Step 4: Benchmark the Difference</strong></p>
+<p>Let’s compare inference time using <code>torch.cuda.Event</code> for timing:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">time</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">fused</span> <span class="o">=</span> <span class="n">fused</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">input_tensor</span> <span class="o">=</span> <span class="n">input_tensor</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">benchmark</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Warmup</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="n">model</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Timing</span>
+</span></span><span class="line"><span class="cl">        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="n">model</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> ms&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">benchmark</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&#34;Unfused&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">benchmark</span><span class="p">(</span><span class="n">fused</span><span class="p">,</span> <span class="s2">&#34;Fused&#34;</span><span class="p">)</span>
+</span></span></code></pre></div><p>Output (run on google colab&rsquo;s T4):</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">Unfused: 564.98 ms
+</span></span><span class="line"><span class="cl">Fused: 226.02 ms
+</span></span></code></pre></div><p>You’ll often see small but meaningful improvements in runtime, especially for models with many such blocks.</p>
+<p><strong>What Actually Happened?</strong></p>
+<p>The fused model doesn&rsquo;t introduce new behavior, it just rewrites the operations into a more efficient execution pattern. During export or ahead-of-time compilation (e.g., TorchScript + TorchInductor), the compiler can now emit a single kernel for the entire fused block, saving memory and execution time.</p>
+<hr>
+<h2 id="when-graph-fusion-helps-and-when-it-doesnt">When Graph Fusion Helps (and When It Doesn’t)<a hidden class="anchor" aria-hidden="true" href="#when-graph-fusion-helps-and-when-it-doesnt">#</a></h2>
+<p>Graph fusion can dramatically improve the performance of deep learning models, but its effectiveness depends on the structure of your model, the execution environment, and the framework/compiler being used. Here’s when it delivers the most benefit, and when its impact may be limited.</p>
+<h3 id="when-graph-fusion-helps">When Graph Fusion Helps<a hidden class="anchor" aria-hidden="true" href="#when-graph-fusion-helps">#</a></h3>
+<p><strong>1. Inference on Edge Devices or CPUs</strong></p>
+<p>Devices like phones, microcontrollers, and Raspberry Pi have limited memory bandwidth and compute power. Fusion reduces kernel launches and memory access, which is crucial on such constrained hardware.</p>
+<p><strong>2. Large Models with Repeated Blocks</strong></p>
+<p>Models like ResNet, MobileNet, or ViT use many repeatable blocks (Conv → BN → ReLU). Fusion applies uniformly across these patterns, compounding the performance benefit.</p>
+<p><strong>3. Pointwise Operation Chains</strong></p>
+<p>Transformers and MLPs often contain sequences of element-wise ops. Fusing them into a single kernel reduces overhead and avoids materializing unnecessary intermediate tensors.</p>
+<p><strong>4. Exported or Compiled Models</strong></p>
+<p>If you export your model using TorchScript, ONNX, or TensorFlow Lite, fusion is often applied as part of the optimization pass, making deployment faster without any model changes.</p>
+<p><strong>5. Latency-Critical Applications</strong></p>
+<p>In real-time systems (e.g., robotics, AR, recommendation engines), shaving off even milliseconds of latency matters. Fusion can provide quick wins without redesigning the model.</p>
+<h3 id="when-fusion-doesnt-help-much">When Fusion Doesn’t Help (Much)<a hidden class="anchor" aria-hidden="true" href="#when-fusion-doesnt-help-much">#</a></h3>
+<p><strong>1. Dynamic Control Flow</strong></p>
+<p>If your model includes if/while statements or data-dependent logic, fusion may not be applied. Compilers often require static graphs to match fusion patterns reliably.</p>
+<p><strong>2. Already-Bound Memory Bottlenecks</strong></p>
+<p>If your model’s performance is limited by I/O, disk access, or network latency (e.g., in large-scale distributed inference), fusion might not make a noticeable dent.</p>
+<p><strong>3. Small Models with Few Ops</strong></p>
+<p>For tiny models (e.g., simple MLPs with 2–3 layers), the overhead that fusion eliminates is already minimal. Gains may be negligible.</p>
+<p><strong>4. Training with Frequent Weight Updates</strong></p>
+<p>In training mode, batch norm uses live batch statistics, and some fused operations (especially with quantization) may not be numerically identical. Fusion is usually more aggressive in inference.</p>
+<p><strong>5. Ops with Side Effects</strong></p>
+<p>Certain operations like Dropout or custom loss functions can’t always be fused, especially if they have randomness or state.</p>
+<hr>
+<h2 id="conclusion">Conclusion<a hidden class="anchor" aria-hidden="true" href="#conclusion">#</a></h2>
+<p>Graph fusion is one of the most impactful, low-effort ways to optimize deep learning models. By merging multiple adjacent operations into a single fused kernel, it reduces memory access, kernel launch overhead, and runtime latency, often with zero changes to model accuracy or behavior.</p>
+<p>While fusion happens mostly under the hood, understanding how it works, and when it applies, can help you build more efficient models and make smarter deployment decisions. Whether you’re exporting a model for inference, compiling for edge devices, or optimizing training with PyTorch’s AOTAutograd, fusion plays a central role in turning your model into a high-performance executable.</p>
+<p>As frameworks and compilers evolve, fusion is becoming more dynamic, hardware-aware, and integrated with other optimization techniques like quantization, pruning, and code generation. It&rsquo;s no longer just a backend trick, it’s a key part of how modern deep learning systems scale.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://arikpoz.github.io/tags/machine-learning/">Machine-Learning</a></li>
+      <li><a href="https://arikpoz.github.io/tags/optimization/">Optimization</a></li>
+      <li><a href="https://arikpoz.github.io/tags/deep-learning/">Deep-Learning</a></li>
+      <li><a href="https://arikpoz.github.io/tags/graph-fusion/">Graph-Fusion</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="next" href="https://arikpoz.github.io/posts/2025-04-29-low-rank-factorization-in-pytorch-compressing-neural-networks-with-linear-algebra/">
+    <span class="title">Next »</span>
+    <br>
+    <span>Low-Rank Factorization in PyTorch: Compressing Neural Networks with Linear Algebra</span>
+  </a>
+</nav>
+
+
+<ul class="share-buttons">
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Faster Models with Graph Fusion: How Deep Learning Frameworks Optimize Your Computation on x"
+            href="https://x.com/intent/tweet/?text=Faster%20Models%20with%20Graph%20Fusion%3a%20How%20Deep%20Learning%20Frameworks%20Optimize%20Your%20Computation&amp;url=https%3a%2f%2farikpoz.github.io%2fposts%2f2025-05-07-faster-models-with-graph-fusion-how-deep-learning-frameworks-optimize-your-computation%2f&amp;hashtags=machine-learning%2coptimization%2cdeep-learning%2cgraph-fusion">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M512 62.554 L 512 449.446 C 512 483.97 483.97 512 449.446 512 L 62.554 512 C 28.03 512 0 483.97 0 449.446 L 0 62.554 C 0 28.03 28.029 0 62.554 0 L 449.446 0 C 483.971 0 512 28.03 512 62.554 Z M 269.951 190.75 L 182.567 75.216 L 56 75.216 L 207.216 272.95 L 63.9 436.783 L 125.266 436.783 L 235.9 310.383 L 332.567 436.783 L 456 436.783 L 298.367 228.367 L 432.367 75.216 L 371.033 75.216 Z M 127.633 110 L 164.101 110 L 383.481 400.065 L 349.5 400.065 Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Faster Models with Graph Fusion: How Deep Learning Frameworks Optimize Your Computation on linkedin"
+            href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2farikpoz.github.io%2fposts%2f2025-05-07-faster-models-with-graph-fusion-how-deep-learning-frameworks-optimize-your-computation%2f&amp;title=Faster%20Models%20with%20Graph%20Fusion%3a%20How%20Deep%20Learning%20Frameworks%20Optimize%20Your%20Computation&amp;summary=Faster%20Models%20with%20Graph%20Fusion%3a%20How%20Deep%20Learning%20Frameworks%20Optimize%20Your%20Computation&amp;source=https%3a%2f%2farikpoz.github.io%2fposts%2f2025-05-07-faster-models-with-graph-fusion-how-deep-learning-frameworks-optimize-your-computation%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Faster Models with Graph Fusion: How Deep Learning Frameworks Optimize Your Computation on reddit"
+            href="https://reddit.com/submit?url=https%3a%2f%2farikpoz.github.io%2fposts%2f2025-05-07-faster-models-with-graph-fusion-how-deep-learning-frameworks-optimize-your-computation%2f&title=Faster%20Models%20with%20Graph%20Fusion%3a%20How%20Deep%20Learning%20Frameworks%20Optimize%20Your%20Computation">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Faster Models with Graph Fusion: How Deep Learning Frameworks Optimize Your Computation on facebook"
+            href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2farikpoz.github.io%2fposts%2f2025-05-07-faster-models-with-graph-fusion-how-deep-learning-frameworks-optimize-your-computation%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Faster Models with Graph Fusion: How Deep Learning Frameworks Optimize Your Computation on whatsapp"
+            href="https://api.whatsapp.com/send?text=Faster%20Models%20with%20Graph%20Fusion%3a%20How%20Deep%20Learning%20Frameworks%20Optimize%20Your%20Computation%20-%20https%3a%2f%2farikpoz.github.io%2fposts%2f2025-05-07-faster-models-with-graph-fusion-how-deep-learning-frameworks-optimize-your-computation%2f">
+            <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Faster Models with Graph Fusion: How Deep Learning Frameworks Optimize Your Computation on telegram"
+            href="https://telegram.me/share/url?text=Faster%20Models%20with%20Graph%20Fusion%3a%20How%20Deep%20Learning%20Frameworks%20Optimize%20Your%20Computation&amp;url=https%3a%2f%2farikpoz.github.io%2fposts%2f2025-05-07-faster-models-with-graph-fusion-how-deep-learning-frameworks-optimize-your-computation%2f">
+            <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28" height="30px" width="30px" fill="currentColor">
+                <path
+                    d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+            </svg>
+        </a>
+    </li>
+    <li>
+        <a target="_blank" rel="noopener noreferrer" aria-label="share Faster Models with Graph Fusion: How Deep Learning Frameworks Optimize Your Computation on ycombinator"
+            href="https://news.ycombinator.com/submitlink?t=Faster%20Models%20with%20Graph%20Fusion%3a%20How%20Deep%20Learning%20Frameworks%20Optimize%20Your%20Computation&u=https%3a%2f%2farikpoz.github.io%2fposts%2f2025-05-07-faster-models-with-graph-fusion-how-deep-learning-frameworks-optimize-your-computation%2f">
+            <svg version="1.1" xml:space="preserve" width="30px" height="30px" viewBox="0 0 512 512" fill="currentColor"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+                <path
+                    d="M449.446 0C483.971 0 512 28.03 512 62.554L512 449.446C512 483.97 483.97 512 449.446 512L62.554 512C28.03 512 0 483.97 0 449.446L0 62.554C0 28.03 28.029 0 62.554 0L449.446 0ZM183.8767 87.9921H121.8427L230.6673 292.4508V424.0079H281.3328V292.4508L390.1575 87.9921H328.1233L256 238.2489z" />
+            </svg>
+        </a>
+    </li>
+</ul>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="https://arikpoz.github.io/">Practical ML</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

@@ -9,15 +9,36 @@
       <url>https://arikpoz.github.io/images/papermod-cover.png</url>
       <link>https://arikpoz.github.io/images/papermod-cover.png</link>
     </image>
-    <generator>Hugo -- 0.147.0</generator>
+    <generator>Hugo -- 0.147.2</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 29 Apr 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 07 May 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://arikpoz.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Deep-Learning</title>
       <link>https://arikpoz.github.io/tags/deep-learning/</link>
-      <pubDate>Tue, 29 Apr 2025 00:00:00 +0000</pubDate>
+      <pubDate>Wed, 07 May 2025 00:00:00 +0000</pubDate>
       <guid>https://arikpoz.github.io/tags/deep-learning/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Graph-Fusion</title>
+      <link>https://arikpoz.github.io/tags/graph-fusion/</link>
+      <pubDate>Wed, 07 May 2025 00:00:00 +0000</pubDate>
+      <guid>https://arikpoz.github.io/tags/graph-fusion/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Machine-Learning</title>
+      <link>https://arikpoz.github.io/tags/machine-learning/</link>
+      <pubDate>Wed, 07 May 2025 00:00:00 +0000</pubDate>
+      <guid>https://arikpoz.github.io/tags/machine-learning/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Optimization</title>
+      <link>https://arikpoz.github.io/tags/optimization/</link>
+      <pubDate>Wed, 07 May 2025 00:00:00 +0000</pubDate>
+      <guid>https://arikpoz.github.io/tags/optimization/</guid>
       <description></description>
     </item>
     <item>
@@ -28,24 +49,10 @@
       <description></description>
     </item>
     <item>
-      <title>Machine-Learning</title>
-      <link>https://arikpoz.github.io/tags/machine-learning/</link>
-      <pubDate>Tue, 29 Apr 2025 00:00:00 +0000</pubDate>
-      <guid>https://arikpoz.github.io/tags/machine-learning/</guid>
-      <description></description>
-    </item>
-    <item>
       <title>Model-Compression</title>
       <link>https://arikpoz.github.io/tags/model-compression/</link>
       <pubDate>Tue, 29 Apr 2025 00:00:00 +0000</pubDate>
       <guid>https://arikpoz.github.io/tags/model-compression/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Optimization</title>
-      <link>https://arikpoz.github.io/tags/optimization/</link>
-      <pubDate>Tue, 29 Apr 2025 00:00:00 +0000</pubDate>
-      <guid>https://arikpoz.github.io/tags/optimization/</guid>
       <description></description>
     </item>
     <item>
