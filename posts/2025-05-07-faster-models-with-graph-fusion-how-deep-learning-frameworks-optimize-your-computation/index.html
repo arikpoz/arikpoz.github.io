@@ -223,7 +223,7 @@ Graph fusion, also known as operation fusion or kernel fusion, refers to the pro
 <hr>
 <h2 id="motivation-for-fusion">Motivation for Fusion<a hidden class="anchor" aria-hidden="true" href="#motivation-for-fusion">#</a></h2>
 <p>To understand why graph fusion matters, we need to look at the inefficiencies in how deep learning models are typically executed.</p>
-<p>Most neural networks are expressed as computational graphs where each node (operation) is executed independently: a convolution runs, writes its output to memory; batch normalization reads that output, processes it, and writes its own output; then ReLU does the same, and so on. Each step involves a <strong>memory read</strong>, <strong>computation</strong>, and <strong>memory write</strong>, plus a kernel launch on the GPU or CPU.</p>
+<p>Most neural networks are expressed as computational graphs where each node (operation) is executed independently: a convolution runs, writes its output to memory, batch normalization reads that output, processes it, and writes its own output, then ReLU does the same, and so on. Each step involves a <strong>memory read</strong>, <strong>computation</strong>, and <strong>memory write</strong>, plus a kernel launch on the GPU or CPU.</p>
 <p>This process leads to several key performance bottlenecks:</p>
 <p><strong>1. Memory Bandwidth Bottlenecks</strong></p>
 <p>Modern accelerators like GPUs are extremely fast at computation, but they’re often limited by memory bandwidth. Writing intermediate results to memory and reading them back in the next op can consume more time than the computation itself. Fusing operations keeps intermediate values in registers or shared memory, drastically reducing memory traffic.</p>
@@ -420,7 +420,7 @@ $$</p>
       <tr>
           <td><strong>ONNX Runtime</strong></td>
           <td>Predefined patterns (Conv+BN, etc.)</td>
-          <td>Requires export; supports EP-specific fusion</td>
+          <td>Requires export, supports EP-specific fusion</td>
       </tr>
       <tr>
           <td><strong>TensorRT</strong></td>
