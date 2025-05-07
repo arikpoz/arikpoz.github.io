@@ -143,7 +143,7 @@ Graph fusion, also known as operation fusion or kernel fusion, refers to the pro
     <h1 class="post-title entry-hint-parent">
       Faster Models with Graph Fusion: How Deep Learning Frameworks Optimize Your Computation
     </h1>
-    <div class="post-meta"><span title='2025-05-07 00:00:00 +0000 UTC'>May 7, 2025</span>&nbsp;·&nbsp;12 min&nbsp;·&nbsp;Arik Poznanski
+    <div class="post-meta"><span title='2025-05-07 00:00:00 +0000 UTC'>May 7, 2025</span>&nbsp;·&nbsp;13 min&nbsp;·&nbsp;Arik Poznanski
 
 </div>
   </header> <div class="toc">
@@ -181,7 +181,9 @@ Graph fusion, also known as operation fusion or kernel fusion, refers to the pro
                 <li>
                     <a href="#tensorflow" aria-label="TensorFlow">TensorFlow</a></li>
                 <li>
-                    <a href="#onnx-runtime" aria-label="ONNX Runtime">ONNX Runtime</a></li></ul>
+                    <a href="#onnx-runtime" aria-label="ONNX Runtime">ONNX Runtime</a></li>
+                <li>
+                    <a href="#common-toolchains-and-their-fusion-behavior" aria-label="Common Toolchains and Their Fusion Behavior">Common Toolchains and Their Fusion Behavior</a></li></ul>
                 </li>
                 <li>
                     <a href="#example-fusing-conv--batchnorm-in-pytorch" aria-label="Example: Fusing Conv &#43; BatchNorm in PyTorch">Example: Fusing Conv + BatchNorm in PyTorch</a></li>
@@ -342,6 +344,8 @@ $$</p>
 </span></span><span class="line"><span class="cl">FusedAddReLU
 </span></span></code></pre></div><h3 id="normalization--activation">Normalization + Activation<a hidden class="anchor" aria-hidden="true" href="#normalization--activation">#</a></h3>
 <p>In transformer models, layer normalization followed by an activation like GELU is a candidate for fusion, especially in inference with fixed sequence lengths.</p>
+<blockquote>
+<p>Note: Modern normalization layers like <code>LayerNorm</code> and <code>RMSNorm</code>, common in transformer-based architectures, cannot be fused with convolution layers, since they operate across different dimensions and rely on input-dependent statistics.</p></blockquote>
 <hr>
 <h2 id="fusion-in-practice-framework-specific-techniques">Fusion in Practice: Framework-Specific Techniques<a hidden class="anchor" aria-hidden="true" href="#fusion-in-practice-framework-specific-techniques">#</a></h2>
 <p>While the concept of graph fusion is universal, its implementation varies across deep learning frameworks. Each framework has its own compiler stack, optimization passes, and APIs to expose or trigger fusion. Here&rsquo;s how fusion is handled in the most widely used ecosystems:</p>
@@ -393,6 +397,43 @@ $$</p>
 <p><strong>Pretrained Model Optimizer Tools</strong>: ONNX Runtime provides CLI and Python tools (<code>optimizer.optimize_model</code>) that allow you to export a fused version of your model for deployment.</p>
 </li>
 </ul>
+<h3 id="common-toolchains-and-their-fusion-behavior">Common Toolchains and Their Fusion Behavior<a hidden class="anchor" aria-hidden="true" href="#common-toolchains-and-their-fusion-behavior">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th>Toolchain</th>
+          <th>Fusion Scope</th>
+          <th>Notes</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>TorchScript</strong></td>
+          <td>Basic operator fusion</td>
+          <td>Works best with scripted models or traced subgraphs</td>
+      </tr>
+      <tr>
+          <td><strong>TorchInductor</strong></td>
+          <td>Advanced fusion (pointwise, matmul)</td>
+          <td>Can fuse forward &amp; backward with AOTAutograd</td>
+      </tr>
+      <tr>
+          <td><strong>ONNX Runtime</strong></td>
+          <td>Predefined patterns (Conv+BN, etc.)</td>
+          <td>Requires export; supports EP-specific fusion</td>
+      </tr>
+      <tr>
+          <td><strong>TensorRT</strong></td>
+          <td>Aggressive layer fusion + quantization</td>
+          <td>Hardware-specific, works best with static shapes</td>
+      </tr>
+      <tr>
+          <td><strong>XLA (TensorFlow)</strong></td>
+          <td>High-level and low-level fusion</td>
+          <td>Fuses ops across control flow when possible</td>
+      </tr>
+  </tbody>
+</table>
 <hr>
 <h2 id="example-fusing-conv--batchnorm-in-pytorch">Example: Fusing Conv + BatchNorm in PyTorch<a hidden class="anchor" aria-hidden="true" href="#example-fusing-conv--batchnorm-in-pytorch">#</a></h2>
 <p>To see graph fusion in action, let’s walk through a practical example of fusing a convolution and batch normalization layer in PyTorch. This pattern appears frequently in convolutional neural networks like ResNet and MobileNet, and fusing it can improve inference efficiency with no loss in accuracy.</p>
@@ -477,6 +518,8 @@ $$</p>
 <p>In training mode, batch norm uses live batch statistics, and some fused operations (especially with quantization) may not be numerically identical. Fusion is usually more aggressive in inference.</p>
 <p><strong>5. Ops with Side Effects</strong></p>
 <p>Certain operations like Dropout or custom loss functions can’t always be fused, especially if they have randomness or state.</p>
+<p><strong>6. Limited Fusion in Attention Blocks</strong></p>
+<p>In attention-based models, full fusion is limited due to operations like softmax and masking. However, earlier stages such as projection layers followed by activation functions are typically fusible, especially if implemented in a standard way.</p>
 <hr>
 <h2 id="conclusion">Conclusion<a hidden class="anchor" aria-hidden="true" href="#conclusion">#</a></h2>
 <p>Graph fusion is one of the most impactful, low-effort ways to optimize deep learning models. By merging multiple adjacent operations into a single fused kernel, it reduces memory access, kernel launch overhead, and runtime latency, often with zero changes to model accuracy or behavior.</p>
